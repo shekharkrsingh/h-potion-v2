@@ -13,6 +13,7 @@ import { AuthFooter } from '@/components/auth/AuthFooter';
 import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { createStyles } from '@/styles/auth/signup-account.styles';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 export default function SignupAccountScreen() {
     const dispatch = useDispatch();
@@ -49,28 +50,36 @@ export default function SignupAccountScreen() {
             primaryButtonTitle="Next: Essential Details"
             onPrimaryPress={handleNext}
             onBack={() => router.back()}
+            primaryButtonDisabled={!firstName || !lastName}
             onHelp={() => Alert.alert('Help', 'Need assistance? Contact support@hpotion.com')}
             footer={<AuthFooter mode="signup" />}
             socialLogins={<SocialLoginButtons />}
             logo={<AuthLogo />}
         >
             <View style={styles.container}>
-                <Input
-                    label="First Name"
-                    placeholder="John"
-                    value={firstName}
-                    onChangeText={setFirstName}
-                    error={errors.firstName}
-                    leftIcon={<User size={20} color={theme.text.tertiary} />}
-                />
-                <Input
-                    label="Last Name"
-                    placeholder="Doe"
-                    value={lastName}
-                    onChangeText={setLastName}
-                    error={errors.lastName}
-                    leftIcon={<User size={20} color={theme.text.tertiary} />}
-                />
+                <View>
+                    <Input
+                        label="First Name"
+                        placeholder="John"
+                        value={firstName}
+                        onChangeText={setFirstName}
+                        error={errors.firstName}
+                        leftIcon={<User size={20} color={theme.text.tertiary} />}
+                    />
+                    <VerificationBadge visible={firstName.length > 1} style={{ top: 42 }} />
+                </View>
+
+                <View>
+                    <Input
+                        label="Last Name"
+                        placeholder="Doe"
+                        value={lastName}
+                        onChangeText={setLastName}
+                        error={errors.lastName}
+                        leftIcon={<User size={20} color={theme.text.tertiary} />}
+                    />
+                    <VerificationBadge visible={lastName.length > 1} style={{ top: 42 }} />
+                </View>
             </View>
         </AuthStepLayout>
     );

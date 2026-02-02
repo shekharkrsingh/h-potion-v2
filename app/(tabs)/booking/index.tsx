@@ -37,9 +37,10 @@ import { useTheme } from '@/theme/ThemeContext';
 import { Text } from '@/components/ui/Text';
 import { createStyles } from '@/styles/screens/BookingScreen.styles';
 import { haptics } from '@/utils/haptics';
-import BookingCard from '@/components/booking/BookingCard';
+import AppointmentListItem from '@/components/appointments/AppointmentListItem';
 import { BookingListSkeleton } from '@/components/booking/BookingSkeletons';
 import { BookingFilterModal } from '@/components/booking/BookingFilterModal';
+import { websocketAppointment } from '@/services/websocket/websocketService';
 
 // Separate Header for better performance
 const BookingHeader = React.memo(({ theme, isDark, isSearchVisible, setIsSearchVisible, searchQuery, setSearchQuery, searchAnim, inputRef }: any) => {
@@ -186,7 +187,7 @@ const BookingScreen = () => {
 
     const { appointments, isLoading } = useSelector((state: RootState) => state.appointments);
     const [refreshing, setRefreshing] = useState(false);
-    const [activeFilter, setActiveFilter] = useState<'all' | 'available' | 'treated' | 'emergency' | 'cancelled' | 'in-person' | 'online'>('available');
+    const [activeFilter, setActiveFilter] = useState<'all' | 'available' | 'treated' | 'emergency' | 'cancelled' | 'in-person' | 'online' | 'pending'>('available');
     const [searchQuery, setSearchQuery] = useState('');
     const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
 
@@ -248,9 +249,17 @@ const BookingScreen = () => {
 
     const onRefresh = async () => {
         setRefreshing(true);
-        await loadData();
-        setRefreshing(false);
-        haptics.selection();
+        try {
+            await Promise.all([
+                loadData(),
+                websocketAppointment.ensureConnected()
+            ]);
+        } catch (error) {
+            console.error('[Booking] Refresh failed:', error);
+        } finally {
+            setRefreshing(false);
+            haptics.selection();
+        }
     };
 
     useFocusEffect(
@@ -268,13 +277,14 @@ const BookingScreen = () => {
 
             const matchesFilter = activeFilter === 'all'
                 ? true
-                : activeFilter === 'available' ? !apt.treated && !apt.isEmergency
+                : activeFilter === 'available' ? !apt.treated && apt.availableAtClinic
                     : activeFilter === 'treated' ? apt.treated
                         : activeFilter === 'emergency' ? apt.isEmergency
                             : activeFilter === 'cancelled' ? apt.status === 'CANCELLED'
-                                : activeFilter === 'in-person' ? apt.appointmentType === 'IN_PERSON'
-                                    : activeFilter === 'online' ? apt.appointmentType === 'ONLINE'
-                                        : true;
+                                : activeFilter === 'pending' ? !apt.treated && apt.status !== 'CANCELLED' && !apt.availableAtClinic
+                                    : activeFilter === 'in-person' ? apt.appointmentType === 'IN_PERSON'
+                                        : activeFilter === 'online' ? apt.appointmentType === 'ONLINE'
+                                            : true;
 
             const matchesSearch = debouncedSearchQuery === '' ||
                 apt.patientName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -289,27 +299,26 @@ const BookingScreen = () => {
         if (activeFilter === 'cancelled') return 'Cancelled';
         if (activeFilter === 'in-person') return 'In-Person';
         if (activeFilter === 'online') return 'Online';
+        if (activeFilter === 'pending') return 'Pending';
         return 'Filter';
     }, [activeFilter]);
 
     const isAdvancedFilterActive = useMemo(() =>
-        ['emergency', 'cancelled', 'in-person', 'online'].includes(activeFilter),
+        ['emergency', 'cancelled', 'in-person', 'online', 'pending'].includes(activeFilter),
         [activeFilter]);
 
     // Optimized navigation handler
     const handleCardPress = useCallback((id: string) => {
-        router.push({ pathname: '/(tabs)/appointments/details/[id]', params: { id } });
+        router.push({ pathname: '/appointments/details/[id]', params: { id } });
     }, [router]);
 
     // Render item function for FlatList
     const renderItem = useCallback(({ item }: { item: Appointment }) => (
-        <BookingCard
-            item={item}
-            theme={theme}
-            styles={styles}
+        <AppointmentListItem
+            appointment={item}
             onPress={handleCardPress}
         />
-    ), [theme, styles, handleCardPress]);
+    ), [handleCardPress]);
 
     const toggleFilterModal = useCallback((show: boolean) => {
         setShowFilterModal(show);

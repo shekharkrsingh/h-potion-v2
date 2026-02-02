@@ -15,6 +15,7 @@ import { haptics } from '@/utils/haptics';
 import { NotificationItem } from '@/components/notifications/NotificationItem';
 import { NotificationSkeleton } from '@/components/notifications/NotificationSkeleton';
 import { NotificationEmptyState } from '@/components/notifications/NotificationEmptyState';
+import { websocketAppointment } from '@/services/websocket/websocketService';
 
 
 
@@ -41,8 +42,16 @@ const NotificationScreen = () => {
     const handleRefresh = useCallback(async () => {
         setRefreshing(true);
         haptics.impact();
-        await dispatch(fetchNotifications());
-        setRefreshing(false);
+        try {
+            await Promise.all([
+                dispatch(fetchNotifications()),
+                websocketAppointment.ensureConnected()
+            ]);
+        } catch (error) {
+            console.error('[Notifications] Refresh failed:', error);
+        } finally {
+            setRefreshing(false);
+        }
     }, [dispatch]);
 
     const handleMarkAllRead = useCallback(() => {

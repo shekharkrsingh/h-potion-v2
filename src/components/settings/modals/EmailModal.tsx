@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { View, Alert, ScrollView } from 'react-native';
-import { Mail, Check } from 'lucide-react-native';
+import { View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { Mail, Check, Eye, EyeOff } from 'lucide-react-native';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -25,6 +26,7 @@ export const EmailModal = React.memo(({ visible, onClose, currentEmail, theme }:
     const [isLoading, setIsLoading] = useState(false);
     const [step, setStep] = useState<'input' | 'otp'>('input');
     const [form, setForm] = useState({ newEmail: '', otp: '', confirmPassword: '' });
+    const [showPassword, setShowPassword] = useState(false);
     const { showToast } = useToast();
 
     // Reset state when modal opens/closes
@@ -32,6 +34,7 @@ export const EmailModal = React.memo(({ visible, onClose, currentEmail, theme }:
         if (!visible) {
             setStep('input');
             setForm({ newEmail: '', otp: '', confirmPassword: '' });
+            setShowPassword(false);
         }
     }, [visible]);
 
@@ -79,7 +82,13 @@ export const EmailModal = React.memo(({ visible, onClose, currentEmail, theme }:
 
     return (
         <BaseEditModal visible={visible} title={step === 'input' ? "Update Email" : "Verify Email"} onClose={onClose}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+            <KeyboardAwareScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: spacing.xxl }}
+                enableOnAndroid={true}
+                extraScrollHeight={100}
+                enableAutomaticScroll={true}
+            >
                 <View style={{ alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.m }}>
                     <View style={{
                         width: 60,
@@ -135,30 +144,41 @@ export const EmailModal = React.memo(({ visible, onClose, currentEmail, theme }:
                             title="Send Verification Code"
                             isLoading={isLoading}
                             onPress={handleSendCode}
+                            disabled={!/\S+@\S+\.\S+/.test(form.newEmail) || form.newEmail === currentEmail}
                             style={{ marginTop: spacing.m }}
                         />
                     </View>
                 ) : (
                     <View style={{ gap: spacing.m }}>
-                        <Input
-                            label="Verification Code (OTP)"
-                            placeholder="123456"
-                            keyboardType="number-pad"
-                            value={form.otp}
-                            onChangeText={t => setForm(p => ({ ...p, otp: t }))}
-                        />
-                        <Input
-                            label="Confirm Password"
-                            placeholder="Enter your current password"
-                            secureTextEntry
-                            value={form.confirmPassword}
-                            onChangeText={t => setForm(p => ({ ...p, confirmPassword: t }))}
-                        />
+                        <View>
+                            <Input
+                                label="Verification Code (OTP)"
+                                placeholder="123456"
+                                keyboardType="number-pad"
+                                maxLength={6}
+                                value={form.otp}
+                                onChangeText={t => setForm(p => ({ ...p, otp: t.replace(/\D/g, '').slice(0, 6) }))}
+                            />
+                            <VerificationBadge visible={form.otp.length === 6} style={{ top: 42, right: 12 }} />
+                        </View>
+                        <View>
+                            <Input
+                                label="Confirm Password"
+                                placeholder="Enter your current password"
+                                secureTextEntry={!showPassword}
+                                value={form.confirmPassword}
+                                onChangeText={t => setForm(p => ({ ...p, confirmPassword: t }))}
+                                rightIcon={showPassword ? <EyeOff size={18} color={theme.text.tertiary} /> : <Eye size={18} color={theme.text.tertiary} />}
+                                onRightIconPress={() => { haptics.selection(); setShowPassword(!showPassword); }}
+                            />
+                            <VerificationBadge visible={form.confirmPassword.length >= 8} style={{ top: 42, right: 46 }} />
+                        </View>
 
                         <Button
                             title="Verify & Update"
                             isLoading={isLoading}
                             onPress={handleUpdate}
+                            disabled={form.otp.length !== 6 || !form.confirmPassword}
                             style={{ marginTop: spacing.m }}
                         />
 
@@ -170,7 +190,7 @@ export const EmailModal = React.memo(({ visible, onClose, currentEmail, theme }:
                         />
                     </View>
                 )}
-            </ScrollView>
+            </KeyboardAwareScrollView>
         </BaseEditModal>
     );
 });

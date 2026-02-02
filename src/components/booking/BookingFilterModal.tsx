@@ -12,7 +12,8 @@ import {
     AlertCircle,
     Trash2,
     MapPin,
-    Wifi
+    Wifi,
+    Clock
 } from 'lucide-react-native';
 import { Text } from '@/components/ui/Text';
 import { spacing } from '@/theme/spacing';
@@ -148,6 +149,17 @@ export const BookingFilterModal = ({
                                     setActiveFilter={setActiveFilter}
                                     setShowFilterModal={(show) => !show && onClose()}
                                     color={isDark ? theme.text.tertiary : '#64748b'}
+                                />
+                                <FilterOption
+                                    label="Pending"
+                                    value="pending"
+                                    activeFilter={activeFilter}
+                                    icon={<Clock size={16} />}
+                                    theme={theme}
+                                    styles={styles}
+                                    setActiveFilter={setActiveFilter}
+                                    setShowFilterModal={(show) => !show && onClose()}
+                                    color={theme.palette.warning[500]}
                                 />
                             </View>
                         </View>

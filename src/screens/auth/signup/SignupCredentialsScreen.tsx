@@ -75,6 +75,12 @@ export default function SignupCredentialsScreen() {
             onBack={() => router.back()}
             onHelp={() => Alert.alert('Help', 'Need assistance? Contact support@hpotion.com')}
             isLoading={isLoading}
+            primaryButtonDisabled={
+                !/\S+@\S+\.\S+/.test(email) ||
+                password.length < 6 ||
+                password !== confirmPassword ||
+                !agreedToTerms
+            }
             logo={<AuthLogo />}
             footer={<AuthFooter mode="signup" />}
             socialLogins={<SocialLoginButtons />}

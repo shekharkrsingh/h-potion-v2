@@ -135,7 +135,7 @@ export const SimpleFormModal: React.FC<SimpleFormModalProps> = ({
         <KeyboardAwareScrollView
             showsVerticalScrollIndicator={false}
             enableOnAndroid={true}
-            extraScrollHeight={20}
+            extraScrollHeight={100}
             enableAutomaticScroll={true}
         >
             {Icon && (

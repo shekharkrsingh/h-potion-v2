@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Shield, Mail } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
 import { Input } from '@/components/ui/Input';
 import { ColorTheme } from '@/theme/colors';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 interface InviteMemberModalProps {
     visible: boolean;
@@ -35,7 +37,13 @@ export const InviteMemberModal = React.memo(({ visible, onClose, onInvite, theme
             title="Invite Member"
             onClose={onClose}
         >
-            <View style={{ padding: 20 }}>
+            <KeyboardAwareScrollView
+                contentContainerStyle={{ padding: 20 }}
+                enableOnAndroid={true}
+                extraScrollHeight={100}
+                enableAutomaticScroll={true}
+                keyboardShouldPersistTaps="handled"
+            >
                 <View style={{
                     flexDirection: 'row',
                     marginBottom: 24,
@@ -52,15 +60,18 @@ export const InviteMemberModal = React.memo(({ visible, onClose, onInvite, theme
                     </View>
                 </View>
 
-                <Input
-                    label="Email Address"
-                    value={inviteEmail}
-                    onChangeText={setInviteEmail}
-                    placeholder="colleague@example.com"
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    leftIcon={<Mail size={20} color={theme.text.tertiary} />}
-                />
+                <View>
+                    <Input
+                        label="Email Address"
+                        value={inviteEmail}
+                        onChangeText={setInviteEmail}
+                        placeholder="colleague@example.com"
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        leftIcon={<Mail size={20} color={theme.text.tertiary} />}
+                    />
+                    <VerificationBadge visible={/\S+@\S+\.\S+/.test(inviteEmail)} style={{ top: 42, right: 12 }} />
+                </View>
 
                 <TouchableOpacity
                     style={{
@@ -72,7 +83,7 @@ export const InviteMemberModal = React.memo(({ visible, onClose, onInvite, theme
                         elevation: 4
                     }}
                     onPress={handleSend}
-                    disabled={inviteEmail.length <= 5 || isSubmitting}
+                    disabled={!/\S+@\S+\.\S+/.test(inviteEmail) || isSubmitting}
                 >
                     <LinearGradient
                         colors={[theme.palette.primary[500], theme.palette.primary[600]]}
@@ -80,7 +91,7 @@ export const InviteMemberModal = React.memo(({ visible, onClose, onInvite, theme
                             paddingVertical: 16,
                             borderRadius: 16,
                             alignItems: 'center',
-                            opacity: (inviteEmail.length > 5 && !isSubmitting) ? 1 : 0.7
+                            opacity: (/\S+@\S+\.\S+/.test(inviteEmail) && !isSubmitting) ? 1 : 0.7
                         }}
                     >
                         <Text style={{ fontWeight: 'bold', color: '#FFFFFF', fontSize: 16 }}>
@@ -88,7 +99,7 @@ export const InviteMemberModal = React.memo(({ visible, onClose, onInvite, theme
                         </Text>
                     </LinearGradient>
                 </TouchableOpacity>
-            </View>
+            </KeyboardAwareScrollView>
         </BaseEditModal>
     );
 });

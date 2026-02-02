@@ -5,10 +5,10 @@ import {
     TouchableOpacity,
     Modal,
     StatusBar,
-    SafeAreaView,
     ImageBackground,
     Alert
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, X } from 'lucide-react-native';
@@ -275,7 +275,7 @@ const EditProfileScreen = () => {
                         <EditSectionCard
                             index={1}
                             title="Contact Info"
-                            subtitle={formatPhoneNumber(profile?.phoneNumber)}
+                            subtitle={formatPhoneNumber(profile?.phoneNumber) || 'N/A'}
                             icon={Phone}
                             isFilled={!!profile?.phoneNumber}
                             onPress={() => setActiveModal('contact')}
@@ -386,8 +386,8 @@ const EditProfileScreen = () => {
                             icon={User}
                             fields={[
                                 { key: 'firstName', label: 'First Name', validate: (val: string) => val.length < 2 ? 'Too short' : null },
-                                { key: 'lastName', label: 'Last Name', validate: (val: string) => val.length < 2 ? 'Too short' : null },
-                                ...(!isCollaborator ? [{ key: 'bio', label: 'Short Bio', multiline: true, validate: (val: string) => val.length > 100 ? 'Too long' : (val.length < 10 ? 'Too short' : null) }] : [])
+                                { key: 'lastName', label: 'Last Name', validate: (val: string) => val.length > 0 && val.length < 2 ? 'Too short' : null },
+                                ...(!isCollaborator ? [{ key: 'bio', label: 'Short Bio', multiline: true, validate: (val: string) => val.length > 0 && (val.length > 100 ? 'Too long' : (val.length < 10 ? 'Too short' : null)) || null }] : [])
                             ]}
                             data={formData}
                             onUpdate={(key, val) => setFormData((p: any) => ({ ...p, [key]: val }))}

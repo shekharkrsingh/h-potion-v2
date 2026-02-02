@@ -38,9 +38,13 @@ const appointmentDetailsSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(getAppointmentDetails.pending, (state) => {
+            .addCase(getAppointmentDetails.pending, (state, action) => {
                 state.isLoading = true;
                 state.error = null;
+                // Clear state if fetching a new appointment to avoid showing stale data
+                if (state.selectedAppointment?.appointmentId !== action.meta.arg) {
+                    state.selectedAppointment = null;
+                }
             })
             .addCase(getAppointmentDetails.fulfilled, (state, action) => {
                 state.isLoading = false;

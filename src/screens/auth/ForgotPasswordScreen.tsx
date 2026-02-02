@@ -13,6 +13,7 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { AuthFooter } from '@/components/auth/AuthFooter';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { createStyles } from '@/styles/auth/forgot-password.styles';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 export default function ForgotPasswordScreen() {
     const router = useRouter();
@@ -112,6 +113,11 @@ export default function ForgotPasswordScreen() {
             onPrimaryPress={isStep1 ? handleSendLink : handleResetPassword}
             onBack={isStep1 ? () => router.back() : () => dispatch(setRecoveryStep(1))}
             isLoading={isLoading}
+            primaryButtonDisabled={
+                isStep1
+                    ? !/\S+@\S+\.\S+/.test(email)
+                    : (otp.length !== 6 || newPassword.length < 6)
+            }
             onHelp={() => showToast('Need assistance? Contact support@hpotion.com', 'info')}
             logo={<AuthLogo />}
             footer={isStep1 ? <AuthFooter mode="signup" /> : (
@@ -136,47 +142,56 @@ export default function ForgotPasswordScreen() {
             )}
         >
             {isStep1 ? (
-                <Input
-                    label="Email Address"
-                    placeholder="doctor@hospital.com"
-                    value={email}
-                    onChangeText={(text) => {
-                        setEmail(text);
-                        if (localError) setLocalError('');
-                    }}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                    error={localError || (error as string)}
-                    leftIcon={<Mail size={20} color={theme.text.tertiary} />}
-                />
+                <View>
+                    <Input
+                        label="Email Address"
+                        placeholder="doctor@hospital.com"
+                        value={email}
+                        onChangeText={(text) => {
+                            setEmail(text);
+                            if (localError) setLocalError('');
+                        }}
+                        keyboardType="email-address"
+                        autoCapitalize="none"
+                        error={localError || (error as string)}
+                        leftIcon={<Mail size={20} color={theme.text.tertiary} />}
+                    />
+                    <VerificationBadge visible={/\S+@\S+\.\S+/.test(email) && !localError} style={{ top: 42 }} />
+                </View>
             ) : (
                 <View style={styles.container}>
-                    <Input
-                        label="Verification Code"
-                        placeholder="123456"
-                        value={otp}
-                        onChangeText={(text) => {
-                            // Only allow numbers and limit to 6 chars
-                            if (/^\d*$/.test(text) && text.length <= 6) {
-                                setOtp(text);
-                            }
-                        }}
-                        keyboardType="number-pad"
-                        maxLength={6}
-                        error={!otp && localError ? localError : undefined}
-                        leftIcon={<Lock size={20} color={theme.text.tertiary} />}
-                    />
-                    <Input
-                        label="New Password"
-                        placeholder="••••••••"
-                        value={newPassword}
-                        onChangeText={setNewPassword}
-                        secureTextEntry={!showPassword}
-                        error={localError || (error as string)}
-                        leftIcon={<Lock size={20} color={theme.text.tertiary} />}
-                        rightIcon={showPassword ? <EyeOff size={20} color={theme.text.tertiary} /> : <Eye size={20} color={theme.text.tertiary} />}
-                        onRightIconPress={() => setShowPassword(!showPassword)}
-                    />
+                    <View>
+                        <Input
+                            label="Verification Code"
+                            placeholder="123456"
+                            value={otp}
+                            onChangeText={(text) => {
+                                // Only allow numbers and limit to 6 chars
+                                if (/^\d*$/.test(text) && text.length <= 6) {
+                                    setOtp(text);
+                                }
+                            }}
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            error={!otp && localError ? localError : undefined}
+                            leftIcon={<Lock size={20} color={theme.text.tertiary} />}
+                        />
+                        <VerificationBadge visible={otp.length === 6} style={{ top: 42 }} />
+                    </View>
+                    <View>
+                        <Input
+                            label="New Password"
+                            placeholder="••••••••"
+                            value={newPassword}
+                            onChangeText={setNewPassword}
+                            secureTextEntry={!showPassword}
+                            error={localError || (error as string)}
+                            leftIcon={<Lock size={20} color={theme.text.tertiary} />}
+                            rightIcon={showPassword ? <EyeOff size={20} color={theme.text.tertiary} /> : <Eye size={20} color={theme.text.tertiary} />}
+                            onRightIconPress={() => setShowPassword(!showPassword)}
+                        />
+                        <VerificationBadge visible={newPassword.length >= 6 && !localError} style={{ top: 42, right: 46 }} />
+                    </View>
                 </View>
             )}
         </AuthStepLayout>

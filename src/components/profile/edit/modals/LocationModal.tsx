@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
-import { View, ScrollView, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, TextInput, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import * as Location from 'expo-location';
 import { MapPin } from 'lucide-react-native';
 import { Text } from '@/components/ui/Text';
@@ -77,7 +78,13 @@ export const LocationModal: React.FC<LocationModalProps> = ({
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={modalStyles.scrollContent}>
+        <KeyboardAwareScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={modalStyles.scrollContent}
+            enableOnAndroid={true}
+            extraScrollHeight={50}
+            keyboardShouldPersistTaps="handled"
+        >
             <TouchableOpacity
                 style={modalStyles.locationButton}
                 onPress={handleFetchLocation}
@@ -176,6 +183,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({
                 />
                 <Button title="Cancel" variant="outline" onPress={onClose} fullWidth />
             </View>
-        </ScrollView>
+        </KeyboardAwareScrollView >
     );
 };

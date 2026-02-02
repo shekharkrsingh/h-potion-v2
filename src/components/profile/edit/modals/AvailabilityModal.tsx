@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, TouchableOpacity, ScrollView, Platform } from 'react-native';
+import { View, TouchableOpacity, Platform } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Clock, Plus, Trash2 } from 'lucide-react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { Text } from '@/components/ui/Text';
@@ -18,7 +19,17 @@ interface AvailabilityModalProps {
     loading?: boolean;
 }
 
-const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const DAYS_MAP = {
+    'Mon': 'MONDAY',
+    'Tue': 'TUESDAY',
+    'Wed': 'WEDNESDAY',
+    'Thu': 'THURSDAY',
+    'Fri': 'FRIDAY',
+    'Sat': 'SATURDAY',
+    'Sun': 'SUNDAY'
+};
+
+const DAYS = Object.keys(DAYS_MAP);
 
 export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
     selectedDays,
@@ -37,11 +48,12 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
     const [tempStartTime, setTempStartTime] = useState(new Date());
     const [tempEndTime, setTempEndTime] = useState(new Date());
 
-    const toggleDay = (day: string) => {
-        if (selectedDays.includes(day)) {
-            onUpdateDays(selectedDays.filter(d => d !== day));
+    const toggleDay = (dayKey: string) => {
+        const backendDay = DAYS_MAP[dayKey as keyof typeof DAYS_MAP];
+        if (selectedDays.includes(backendDay)) {
+            onUpdateDays(selectedDays.filter(d => d !== backendDay));
         } else {
-            onUpdateDays([...selectedDays, day]);
+            onUpdateDays([...selectedDays, backendDay]);
         }
     };
 
@@ -65,25 +77,34 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 20 }}>
+        <KeyboardAwareScrollView
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={{ paddingBottom: 20 }}
+            enableOnAndroid={true}
+            extraScrollHeight={100}
+            enableAutomaticScroll={true}
+        >
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Working Days</Text>
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
-                    {DAYS.map(day => (
-                        <TouchableOpacity
-                            key={day}
-                            onPress={() => toggleDay(day)}
-                            style={[
-                                styles.premiumInput,
-                                { minWidth: 60, alignItems: 'center' },
-                                selectedDays.includes(day) && styles.focusedInput
-                            ]}
-                        >
-                            <Text color={selectedDays.includes(day) ? theme.palette.primary[500] : theme.text.secondary}>
-                                {day}
-                            </Text>
-                        </TouchableOpacity>
-                    ))}
+                    {DAYS.map(day => {
+                        const isSelected = selectedDays.includes(DAYS_MAP[day as keyof typeof DAYS_MAP]);
+                        return (
+                            <TouchableOpacity
+                                key={day}
+                                onPress={() => toggleDay(day)}
+                                style={[
+                                    styles.premiumInput,
+                                    { minWidth: 60, alignItems: 'center' },
+                                    isSelected && styles.focusedInput
+                                ]}
+                            >
+                                <Text color={isSelected ? theme.palette.primary[500] : theme.text.secondary}>
+                                    {day}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
             </View>
 
@@ -139,6 +160,6 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
                 <Button title="Save Changes" onPress={onSave} isLoading={loading} fullWidth />
                 <Button title="Cancel" variant="outline" onPress={onClose} fullWidth />
             </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 };

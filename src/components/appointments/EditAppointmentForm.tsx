@@ -39,6 +39,8 @@ const formatPhoneNumber = (digits: string) => {
     return `(${clean.slice(0, 3)}) ${clean.slice(3, 6)}-${clean.slice(6, 10)}`;
 };
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 // External Verification Badge Component (Stable)
 const VerificationBadge = () => {
     const { theme } = useTheme();
@@ -110,7 +112,11 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
     const isFirstNameValid = useMemo(() => formData.firstName.trim().length > 0, [formData.firstName]);
     const isLastNameValid = useMemo(() => formData.lastName.trim().length > 0, [formData.lastName]);
     const isContactValid = useMemo(() => formData.contact.replace(/\D/g, '').length >= 10, [formData.contact]);
-    const isEmailValid = useMemo(() => formData.email.includes('@'), [formData.email]);
+    const isEmailValid = useMemo(() => {
+        if (!formData.email) return true;
+        return EMAIL_REGEX.test(formData.email);
+    }, [formData.email]);
+    const shouldShowEmailBadge = useMemo(() => formData.email.length > 0 && EMAIL_REGEX.test(formData.email), [formData.email]);
 
     // Memoized Icons (Fixing Flicker & Compilation Error)
     const firstNameIcon = useMemo(() => isFirstNameValid ? <VerificationBadge /> : undefined, [isFirstNameValid]);
@@ -122,6 +128,7 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
         const newErrors: Record<string, string> = {};
         if (!isFirstNameValid) newErrors.firstName = 'First name is required';
         if (!isContactValid) newErrors.contact = 'Valid contact number required';
+        if (!isEmailValid) newErrors.email = 'Please enter a valid email address';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -243,7 +250,7 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                         <Text style={commonStyles.label}>Email (Optional)</Text>
                         <View>
                             <TextInput
-                                style={commonStyles.premiumInput}
+                                style={[commonStyles.premiumInput, errors.email && { borderColor: theme.status.error }]}
                                 value={formData.email}
                                 onChangeText={(val) => setFormData(p => ({ ...p, email: val }))}
                                 keyboardType="email-address"
@@ -251,12 +258,13 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                                 placeholder="jane@example.com"
                                 placeholderTextColor={theme.text.tertiary}
                             />
-                            {isEmailValid && (
+                            {shouldShowEmailBadge && (
                                 <View style={{ position: 'absolute', right: 12, top: 12 }}>
                                     <VerificationBadge />
                                 </View>
                             )}
                         </View>
+                        {errors.email && <Text style={{ color: theme.status.error, fontSize: 12, marginTop: 4 }}>{errors.email}</Text>}
                     </View>
 
                     <View style={commonStyles.inputContainer}>

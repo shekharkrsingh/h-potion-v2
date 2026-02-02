@@ -12,6 +12,7 @@ import { Lock } from 'lucide-react-native';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { createStyles } from '@/styles/auth/verify.styles';
 import { useToast } from '@/context/ToastContext';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 export default function SignupVerifyScreen() {
     const router = useRouter();
@@ -82,6 +83,7 @@ export default function SignupVerifyScreen() {
             onPrimaryPress={handleVerify}
             onBack={() => router.back()}
             isLoading={isLoading}
+            primaryButtonDisabled={otp.length !== 6}
             onHelp={() => showToast('Need assistance? Contact support@hpotion.com', 'info')}
             logo={<AuthLogo />}
             footer={
@@ -105,16 +107,23 @@ export default function SignupVerifyScreen() {
                 </View>
             }
         >
-            <Input
-                label="Verification Code"
-                placeholder="123456"
-                value={otp}
-                onChangeText={setOtp}
-                keyboardType="number-pad"
-                leftIcon={<Lock size={20} color={theme.text.tertiary} />}
-                style={styles.otpInput}
-                maxLength={6}
-            />
+            <View>
+                <Input
+                    label="Verification Code"
+                    placeholder="123456"
+                    value={otp}
+                    onChangeText={(text) => {
+                        if (/^\d*$/.test(text) && text.length <= 6) {
+                            setOtp(text);
+                        }
+                    }}
+                    keyboardType="number-pad"
+                    leftIcon={<Lock size={20} color={theme.text.tertiary} />}
+                    style={styles.otpInput}
+                    maxLength={6}
+                />
+                <VerificationBadge visible={otp.length === 6} style={{ top: 42 }} />
+            </View>
         </AuthStepLayout>
     );
 }

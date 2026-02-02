@@ -10,7 +10,6 @@ import { ChartsSection } from '@/components/dashboard/ChartsSection';
 import { QuickActions } from '@/components/dashboard/QuickActions';
 import { UpcomingAppointments } from '@/components/dashboard/UpcomingAppointments';
 import { RecentActivity } from '@/components/dashboard/RecentActivity';
-import { Appointment } from '@/components/dashboard/AppointmentCard';
 import { Text } from '@/components/ui/Text';
 import { FadeInView } from '@/components/ui/FadeInView';
 import { AppDispatch, RootState } from '@/store';
@@ -18,19 +17,6 @@ import { fetchStatistics } from '@/store/slices/statisticsSlice';
 import { fetchAppointments, Appointment as ReduxAppointment } from '@/store/slices/appointmentSlice';
 import { fetchProfile } from '@/store/slices/profileSlice';
 import { fetchNotifications } from '@/store/slices/notificationSlice';
-
-// Helper to map Redux appointment to UI component format
-const mapToUIAppointment = (apt: ReduxAppointment): Appointment => {
-    const date = new Date(apt.appointmentDateTime);
-    return {
-        id: apt.appointmentId,
-        patientName: apt.patientName,
-        time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        status: apt.status === 'ACCEPTED' ? 'confirmed' : apt.status === 'CANCELLED' ? 'cancelled' : 'pending',
-        type: apt.appointmentType === 'IN_PERSON' ? 'in-person' : 'online',
-        date: apt.appointmentDateTime
-    };
-};
 
 import { createStyles } from '@/styles/screens/DashboardScreen.styles';
 
@@ -82,9 +68,8 @@ export default function DashboardScreen() {
 
     const userName = profile ? `${profile.firstName} ${profile.lastName}` : (user?.name || 'Doctor');
     const displayAppointments = appointments
-        .filter(apt => !apt.treated)
-        .slice(0, 5)
-        .map(mapToUIAppointment);
+        .filter(apt => !apt.treated && apt.status !== 'CANCELLED')
+        .slice(0, 5);
 
     const isLoading = statsLoading && !refreshing && !statsData;
 

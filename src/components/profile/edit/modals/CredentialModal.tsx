@@ -1,5 +1,6 @@
 import React from 'react';
-import { View, TouchableOpacity, ScrollView, TextInput } from 'react-native';
+import { View, TouchableOpacity, TextInput } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Trash2, Plus } from 'lucide-react-native';
 import { Text } from '@/components/ui/Text';
 import { Button } from '@/components/ui/Button';
@@ -39,7 +40,12 @@ export const CredentialModal: React.FC<CredentialModalProps> = ({
     };
 
     return (
-        <ScrollView showsVerticalScrollIndicator={false}>
+        <KeyboardAwareScrollView
+            showsVerticalScrollIndicator={false}
+            enableOnAndroid={true}
+            extraScrollHeight={100}
+            enableAutomaticScroll={true}
+        >
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>
                     {type === 'education' ? 'Educational Background' : 'Achievements & Awards'}
@@ -75,6 +81,6 @@ export const CredentialModal: React.FC<CredentialModalProps> = ({
                 <Button title="Save Changes" onPress={onSave} isLoading={loading} fullWidth />
                 <Button title="Cancel" variant="outline" onPress={onClose} fullWidth />
             </View>
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 };

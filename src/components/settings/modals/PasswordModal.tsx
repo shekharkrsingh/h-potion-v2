@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Alert, ScrollView } from 'react-native';
+import { View } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Lock, Eye, EyeOff } from 'lucide-react-native';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
 import { Input } from '@/components/ui/Input';
@@ -51,7 +52,13 @@ export const PasswordModal = React.memo(({ visible, onClose, theme }: PasswordMo
 
     return (
         <BaseEditModal visible={visible} title="Security" onClose={onClose}>
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+            <KeyboardAwareScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: spacing.xxl }}
+                enableOnAndroid={true}
+                extraScrollHeight={100}
+                enableAutomaticScroll={true}
+            >
                 <View style={{ alignItems: 'center', marginBottom: spacing.xl, marginTop: spacing.m }}>
                     <View style={{
                         width: 60,
@@ -71,15 +78,19 @@ export const PasswordModal = React.memo(({ visible, onClose, theme }: PasswordMo
                 </View>
 
                 <View style={{ gap: spacing.m }}>
-                    <Input
-                        label="Current Password"
-                        placeholder="••••••••"
-                        secureTextEntry={!showOld}
-                        value={form.old}
-                        onChangeText={t => setForm(p => ({ ...p, old: t }))}
-                        rightIcon={showOld ? <EyeOff size={18} color={theme.text.tertiary} /> : <Eye size={18} color={theme.text.tertiary} />}
-                        onRightIconPress={() => { haptics.selection(); setShowOld(!showOld); }}
-                    />
+                    <View>
+                        <Input
+                            label="Current Password"
+                            placeholder="••••••••"
+                            secureTextEntry={!showOld}
+                            value={form.old}
+                            onChangeText={t => setForm(p => ({ ...p, old: t }))}
+                            rightIcon={showOld ? <EyeOff size={18} color={theme.text.tertiary} /> : <Eye size={18} color={theme.text.tertiary} />}
+                            onRightIconPress={() => { haptics.selection(); setShowOld(!showOld); }}
+                        />
+                        <VerificationBadge visible={form.old.length >= 8} style={{ top: 42, right: 46 }} />
+                    </View>
+
                     <View>
                         <Input
                             label="New Password"
@@ -110,10 +121,11 @@ export const PasswordModal = React.memo(({ visible, onClose, theme }: PasswordMo
                         title="Update Credentials"
                         isLoading={isLoading}
                         onPress={handleUpdate}
+                        disabled={!form.old || form.new.length < 8 || form.new !== form.confirmMatch}
                         style={{ marginTop: spacing.m }}
                     />
                 </View>
-            </ScrollView>
-        </BaseEditModal>
+            </KeyboardAwareScrollView>
+        </BaseEditModal >
     );
 });

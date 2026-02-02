@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { View, TouchableOpacity, Alert, Animated, ImageBackground, Platform, RefreshControl } from 'react-native';
-import { useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
+import { useLocalSearchParams, useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, MoreVertical, AlertCircle, Zap, Building2, Video, DollarSign, MapPin, FileText } from 'lucide-react-native';
@@ -33,6 +33,7 @@ import { StatusBadge } from '@/components/appointments/details/StatusBadge';
 export default function AppointmentDetailsScreen() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const router = useRouter();
+    const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const dispatch = useDispatch<AppDispatch>();
 
@@ -91,12 +92,13 @@ export default function AppointmentDetailsScreen() {
     );
 
     const handleBack = useCallback(() => {
-        if (router.canGoBack()) {
-            router.back();
+        if (navigation.canGoBack()) {
+            navigation.goBack();
         } else {
-            router.replace('/(tabs)/booking');
+            // Fallback to a safe tab
+            router.replace('/(tabs)');
         }
-    }, [router]);
+    }, [navigation, router]);
 
     // Dynamic Refresh
     const onRefresh = useCallback(async () => {
@@ -125,11 +127,11 @@ export default function AppointmentDetailsScreen() {
         if (!appointment) return;
         try {
             await dispatch(cancelAppointment(appointment.appointmentId)).unwrap();
-            handleBack();
+            // Removed handleBack() to allow staying on screen to see "CANCELLED" status
         } catch (e: any) {
             Alert.alert('Error', e.message);
         }
-    }, [appointment, dispatch, router]);
+    }, [appointment, dispatch]);
 
     const handleEditSave = useCallback(async (updates: any) => {
         await handleUpdate(updates);
@@ -171,7 +173,7 @@ export default function AppointmentDetailsScreen() {
         return null;
     }, [appointment, theme, handleUpdate]);
 
-    if (isLoading && !appointment) {
+    if (isLoading && (!appointment || appointment.appointmentId !== id)) {
         return (
             <View style={styles.container}>
                 <View style={[styles.header, { marginTop: insets.top }]}>

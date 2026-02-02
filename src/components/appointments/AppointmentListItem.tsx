@@ -1,43 +1,43 @@
-import React, { memo, useEffect, useRef } from 'react';
+import React, { memo, useEffect, useRef, useMemo } from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
 import { User, Video, MapPin, ChevronRight } from 'lucide-react-native';
 import { Appointment } from '@/store/slices/appointmentSlice';
 import { Text } from '@/components/ui/Text';
-import { ColorTheme } from '@/theme/colors';
-import { ShineView } from '../ui/ShineView';
+import { useTheme } from '@/theme/ThemeContext';
+import { ShineView } from '@/components/ui/ShineView';
+import { createStyles } from '@/styles/components/appointments/AppointmentListItem.styles';
 
-interface BookingCardProps {
-    item: Appointment;
-    theme: ColorTheme;
-    styles: any;
+interface AppointmentListItemProps {
+    appointment: Appointment;
     onPress: (id: string) => void;
 }
 
-const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
-    // Defensive check: ensure item exists
-    if (!item) return null;
+const AppointmentListItem = ({ appointment, onPress }: AppointmentListItemProps) => {
+    const { theme } = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
-    let timeStr = '--:--';
-    try {
-        if (item.appointmentDateTime) {
-            const date = new Date(item.appointmentDateTime);
-            // Check for invalid date
-            if (!isNaN(date.getTime())) {
-                timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (!appointment) return null;
+
+    const timeStr = useMemo(() => {
+        try {
+            if (appointment.appointmentDateTime) {
+                const date = new Date(appointment.appointmentDateTime);
+                if (!isNaN(date.getTime())) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                }
             }
-        }
-    } catch (e) {
-        // Fallback or log error
-    }
+        } catch (e) { }
+        return '--:--';
+    }, [appointment.appointmentDateTime]);
 
-    const isOnline = item.appointmentType === 'ONLINE';
-    const isEmergency = item.isEmergency;
-    const isCancelled = item.status === 'CANCELLED';
+    const isOnline = appointment.appointmentType === 'ONLINE';
+    const isEmergency = appointment.isEmergency;
+    const isCancelled = appointment.status === 'CANCELLED';
 
     const pulseAnim = useRef(new Animated.Value(1)).current;
 
     useEffect(() => {
-        let animation: any = null;
+        let animation: Animated.CompositeAnimation | null = null;
 
         if (isEmergency) {
             animation = Animated.loop(
@@ -56,15 +56,12 @@ const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
             );
             animation.start();
         } else {
-            // Stop any running animation and reset to fully opaque
             pulseAnim.stopAnimation();
             pulseAnim.setValue(1);
         }
 
         return () => {
-            if (animation) {
-                animation.stop();
-            }
+            if (animation) animation.stop();
             pulseAnim.stopAnimation();
         };
     }, [isEmergency]);
@@ -79,14 +76,14 @@ const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
     const getStatusBadge = () => {
         if (isEmergency) {
             return (
-                <View style={[styles.badge, { backgroundColor: '#EF4444' }]}>
+                <View style={[styles.badge, { backgroundColor: theme.status.error }]}>
                     <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>Emergency</Text>
                 </View>
             );
         }
         if (isCancelled) {
             return (
-                <View style={[styles.badge, { backgroundColor: '#64748B' }]}>
+                <View style={[styles.badge, { backgroundColor: theme.palette.neutral[500] }]}>
                     <Text style={[styles.badgeText, { color: '#FFFFFF' }]}>Cancelled</Text>
                 </View>
             );
@@ -95,17 +92,16 @@ const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
     };
 
     const getAvatarColor = () => {
-        if (isEmergency) return '#EF4444';
-        if (isCancelled) return '#64748B';
+        if (isEmergency) return theme.status.error;
+        if (isCancelled) return theme.palette.neutral[500];
         return theme.palette.primary[500];
     };
 
     return (
         <ShineView>
             <TouchableOpacity
-                key={item.appointmentId}
                 activeOpacity={0.9}
-                onPress={() => onPress(item.appointmentId)}
+                onPress={() => onPress(appointment.appointmentId)}
                 style={cardStyle}
             >
                 <View style={styles.cardContent}>
@@ -124,13 +120,13 @@ const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
                             </Animated.View>
                             <View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                                    <Text style={styles.patientName}>{item.patientName}</Text>
+                                    <Text style={styles.patientName}>{appointment.patientName}</Text>
                                     {getStatusBadge()}
                                 </View>
                                 <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 }}>
-                                    <Text style={styles.appointmentTime}>{timeStr} • {item.appointmentType}</Text>
+                                    <Text style={styles.appointmentTime}>{timeStr} • {appointment.appointmentType}</Text>
                                     {isOnline ? (
-                                        <Video size={12} color={isCancelled ? '#64748B' : theme.palette.primary[500]} />
+                                        <Video size={12} color={isCancelled ? theme.palette.neutral[500] : theme.palette.primary[500]} />
                                     ) : (
                                         <MapPin size={12} color={theme.text.tertiary} />
                                     )}
@@ -145,4 +141,4 @@ const BookingCard = ({ item, theme, styles, onPress }: BookingCardProps) => {
     );
 };
 
-export default memo(BookingCard);
+export default memo(AppointmentListItem);

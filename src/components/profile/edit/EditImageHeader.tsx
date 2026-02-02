@@ -72,7 +72,7 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
                     onPress={onEditCover}
                     activeOpacity={0.7}
                 >
-                    <ImageIcon size={20} color="#FFFFFF" />
+                    <ImageIcon size={20} color={theme.palette.primary[500]} />
                 </TouchableOpacity>
             </Animated.View>
 

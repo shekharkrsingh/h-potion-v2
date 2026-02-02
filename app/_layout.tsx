@@ -22,6 +22,7 @@ import { useAppInitialization } from '@/hooks/useAppInitialization';
 import { router } from 'expo-router';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
+import { websocketAppointment } from '@/services/websocket/websocketService';
 
 function AppContent() {
     const [isSplashFinished, setSplashFinished] = useState(false);
@@ -33,6 +34,16 @@ function AppContent() {
     useEffect(() => {
         haptics.setEnabled(hapticsEnabled);
     }, [hapticsEnabled]);
+
+    useEffect(() => {
+        if (isReady) {
+            if (isAuthenticated) {
+                websocketAppointment.connect();
+            } else {
+                websocketAppointment.disconnect();
+            }
+        }
+    }, [isAuthenticated, isReady]);
 
     const [dismissedOptional, setDismissedOptional] = useState(false);
 
@@ -79,7 +90,6 @@ function AppContent() {
     return (
         <ToastProvider>
             <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(tabs)" : "(auth)"}>
-                <Stack.Screen name="index" />
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
             </Stack>

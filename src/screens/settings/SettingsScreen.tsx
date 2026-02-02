@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { View, TouchableOpacity, Animated, Easing, Alert, Modal, ImageBackground } from 'react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
+import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store/hooks';
@@ -52,6 +52,7 @@ export default function SettingsScreen() {
     // Derived Styles & State
     const styles = useMemo(() => createSettingsStyles(theme, insets, isDark), [theme, insets, isDark]);
     const componentStyles = useMemo(() => createEditComponentStyles(theme), [theme]);
+    const params = useLocalSearchParams();
     const [activeModal, setActiveModal] = useState<string | null>(null);
     const scrollY = useRef(new Animated.Value(0)).current;
     const scrollViewRef = useRef<any>(null);
@@ -80,8 +81,11 @@ export default function SettingsScreen() {
 
     useFocusEffect(
         useCallback(() => {
-            scrollViewRef.current?.scrollTo({ y: 0, animated: false });
-        }, [])
+            if (params.reset === 'true') {
+                scrollViewRef.current?.scrollTo({ y: 0, animated: false });
+                router.setParams({ reset: 'false' });
+            }
+        }, [params.reset])
     );
 
     // Action Handlers
@@ -217,8 +221,8 @@ export default function SettingsScreen() {
                     <View style={styles.footer}>
                         <Text style={styles.versionText}>H-Potion for Doctors • Version 2.0.1</Text>
                         <View style={styles.legalLinks}>
-                            <TouchableOpacity onPress={() => router.push('/terms')}><Text style={styles.legalLink}>Terms</Text></TouchableOpacity>
-                            <TouchableOpacity onPress={() => router.push('/privacy')}><Text style={styles.legalLink}>Privacy</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={() => router.push('/legal/terms')}><Text style={styles.legalLink}>Terms</Text></TouchableOpacity>
+                            <TouchableOpacity onPress={() => router.push('/legal/privacy')}><Text style={styles.legalLink}>Privacy</Text></TouchableOpacity>
                         </View>
                     </View>
                 </Animated.ScrollView>

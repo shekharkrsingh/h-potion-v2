@@ -396,7 +396,7 @@ const ProfileScreen = () => {
                                 <ProfileOption
                                     label="Settings"
                                     icon={Settings}
-                                    onPress={() => router.push('/settings')}
+                                    onPress={() => router.push({ pathname: '/settings', params: { reset: 'true' } })}
                                 />
                                 <View>
                                     <ProfileOption

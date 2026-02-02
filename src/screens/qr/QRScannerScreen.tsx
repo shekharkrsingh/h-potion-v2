@@ -142,7 +142,7 @@ export default function QRScannerScreen() {
             setTimeout(() => {
                 setIsProcessing(false);
                 router.push({
-                    pathname: '/(tabs)/appointments/details/[id]',
+                    pathname: '/appointments/details/[id]',
                     params: { id: result.id! }
                 });
             }, 800);

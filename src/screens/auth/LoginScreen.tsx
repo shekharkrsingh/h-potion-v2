@@ -46,6 +46,7 @@ export default function LoginScreen() {
             primaryButtonTitle="Secure Sign In"
             onPrimaryPress={handleLoginWrapper}
             isLoading={isLoading}
+            primaryButtonDisabled={!/\S+@\S+\.\S+/.test(email) || password.length === 0}
             footer={<AuthFooter mode="login" />}
             socialLogins={<SocialLoginButtons />}
             logo={<AuthLogo />}

@@ -55,6 +55,8 @@ import { FadeInView } from '@/components/ui/FadeInView';
 // Styles
 import { createStyles } from '@/styles/screens/AddAppointmentScreen.styles';
 
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 const formatPhoneNumber = (digits: string) => {
     const clean = digits.replace(/\D/g, '').slice(0, 10);
     if (clean.length <= 3) return clean;
@@ -403,6 +405,11 @@ const AddAppointmentScreen = () => {
             return false;
         }
 
+        if (form.email && !EMAIL_REGEX.test(form.email)) {
+            showToast('Please enter a valid email address', 'error');
+            return false;
+        }
+
         const now = new Date();
         if (form.appointmentDateTime <= now && !form.availableAtClinic) {
             showToast('Date must be in the future', 'error');
@@ -719,16 +726,19 @@ const AddAppointmentScreen = () => {
 
                                 {showAdditional && (
                                     <AddAppointmentCard style={{ marginTop: spacing.s }} isDark={isDark} theme={theme}>
-                                        <Input
-                                            ref={emailRef}
-                                            placeholder="Email Address (Optional)"
-                                            value={form.email}
-                                            onChangeText={t => updateForm('email', t)}
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                            leftIcon={<Mail size={18} color={theme.text.secondary} />}
-                                            returnKeyType="done"
-                                        />
+                                        <View>
+                                            <Input
+                                                ref={emailRef}
+                                                placeholder="Email Address (Optional)"
+                                                value={form.email}
+                                                onChangeText={t => updateForm('email', t)}
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                                leftIcon={<Mail size={18} color={theme.text.secondary} />}
+                                                returnKeyType="done"
+                                            />
+                                            <VerificationBadge visible={form.email.length > 0 && EMAIL_REGEX.test(form.email)} styles={styles} />
+                                        </View>
                                         <View style={{ marginTop: spacing.m }}>
                                             {/* Reason Chips (Stage 2) */}
                                             <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ marginBottom: spacing.s, textTransform: 'uppercase' }}>Quick Reason</Text>
@@ -747,36 +757,39 @@ const AddAppointmentScreen = () => {
                                                 ))}
                                             </View>
 
-                                            <TextInput
-                                                placeholder="Patient Description (Optional)"
-                                                placeholderTextColor={theme.text.tertiary}
-                                                value={form.description}
-                                                onChangeText={t => updateForm('description', t)}
-                                                multiline
-                                                maxLength={500}
-                                                style={[
-                                                    {
-                                                        backgroundColor: theme.background.subtle,
-                                                        borderRadius: radius.m,
-                                                        padding: spacing.m,
-                                                        borderWidth: 1,
-                                                        borderColor: isDescriptionFocused ? theme.palette.primary[500] : theme.border.subtle,
-                                                        color: theme.text.primary,
-                                                        fontSize: 16,
-                                                        height: 120,
-                                                        textAlignVertical: 'top',
-                                                        shadowColor: theme.palette.primary[500],
-                                                        shadowOffset: { width: 0, height: 2 },
-                                                        shadowOpacity: isDescriptionFocused ? 0.15 : 0.05,
-                                                        shadowRadius: isDescriptionFocused ? 10 : 5,
-                                                    },
-                                                    isDescriptionFocused && { backgroundColor: theme.background.default }
-                                                ]}
-                                                onFocus={() => setIsDescriptionFocused(true)}
-                                                onBlur={() => setIsDescriptionFocused(false)}
-                                                returnKeyType="default"
-                                                blurOnSubmit={false}
-                                            />
+                                            <View>
+                                                <TextInput
+                                                    placeholder="Patient Description (Optional)"
+                                                    placeholderTextColor={theme.text.tertiary}
+                                                    value={form.description}
+                                                    onChangeText={t => updateForm('description', t)}
+                                                    multiline
+                                                    maxLength={500}
+                                                    style={[
+                                                        {
+                                                            backgroundColor: theme.background.subtle,
+                                                            borderRadius: radius.m,
+                                                            padding: spacing.m,
+                                                            borderWidth: 1,
+                                                            borderColor: isDescriptionFocused ? theme.palette.primary[500] : theme.border.subtle,
+                                                            color: theme.text.primary,
+                                                            fontSize: 16,
+                                                            height: 120,
+                                                            textAlignVertical: 'top',
+                                                            shadowColor: theme.palette.primary[500],
+                                                            shadowOffset: { width: 0, height: 2 },
+                                                            shadowOpacity: isDescriptionFocused ? 0.15 : 0.05,
+                                                            shadowRadius: isDescriptionFocused ? 10 : 5,
+                                                        },
+                                                        isDescriptionFocused && { backgroundColor: theme.background.default }
+                                                    ]}
+                                                    onFocus={() => setIsDescriptionFocused(true)}
+                                                    onBlur={() => setIsDescriptionFocused(false)}
+                                                    returnKeyType="default"
+                                                    blurOnSubmit={false}
+                                                />
+                                                <VerificationBadge visible={form.description.trim().length > 3} styles={styles} />
+                                            </View>
                                             <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 }}>
                                                 <Text variant="caption" color={theme.text.tertiary}>
                                                     {form.description.length}/500
@@ -854,7 +867,7 @@ const AddAppointmentScreen = () => {
                     />
                 </SafeAreaView>
             </ImageBackground>
-        </View >
+        </View>
     );
 };
 

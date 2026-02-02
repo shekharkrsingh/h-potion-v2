@@ -1,7 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
 import { Text } from '@/components/ui/Text';
-import { Appointment, AppointmentCard } from './AppointmentCard';
+import { Appointment } from '@/store/slices/appointmentSlice';
+import AppointmentListItem from '@/components/appointments/AppointmentListItem';
 import { SectionHeader } from './SectionHeader';
 import { createStyles, getSearchGradientColors } from '@/styles/components/dashboard/UpcomingAppointments.styles';
 import { useRouter } from 'expo-router';
@@ -51,10 +52,10 @@ export const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({ appo
                     [1, 2, 3].map((i) => <AppointmentCardSkeleton key={i} />)
                 ) : appointments.length > 0 ? (
                     appointments.map(apt => (
-                        <AppointmentCard
-                            key={apt.id}
+                        <AppointmentListItem
+                            key={apt.appointmentId}
                             appointment={apt}
-                            onPress={(id) => router.push(`/appointments/details/${id}` as any)}
+                            onPress={(id: string) => router.push(`/appointments/details/${id}` as any)}
                         />
                     ))
                 ) : (

@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
-import { View, TouchableOpacity, Animated, Easing, ScrollView } from 'react-native';
+import { View, TouchableOpacity, Animated, Easing, TextInput } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import {
     Headphones, MessageSquare, Zap, CreditCard,
     User, MoreHorizontal, CheckCircle2, ChevronRight
@@ -13,6 +14,7 @@ import { SupportService } from '@/services/supportService';
 import { ColorTheme } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
 import { radius } from '@/theme/radius';
+import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
 interface SupportModalProps {
     visible: boolean;
@@ -66,6 +68,7 @@ const SuccessView = ({ theme, onClose }: { theme: ColorTheme; onClose: () => voi
 export const SupportModal = React.memo(({ visible, onClose, theme }: SupportModalProps) => {
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
+    const [isMessageFocused, setIsMessageFocused] = useState(false);
     const [form, setForm] = useState({ subject: '', category: 'General', message: '' });
 
     const categories = useMemo(() => [
@@ -102,7 +105,13 @@ export const SupportModal = React.memo(({ visible, onClose, theme }: SupportModa
             {isSuccess ? (
                 <SuccessView theme={theme} onClose={handleClose} />
             ) : (
-                <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: spacing.xxl }}>
+                <KeyboardAwareScrollView
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: spacing.xxl }}
+                    enableOnAndroid={true}
+                    extraScrollHeight={100}
+                    enableAutomaticScroll={true}
+                >
                     <View style={{ gap: spacing.l }}>
                         <View style={{ alignItems: 'center', marginTop: spacing.s }}>
                             <View style={{
@@ -123,12 +132,15 @@ export const SupportModal = React.memo(({ visible, onClose, theme }: SupportModa
                         </View>
 
                         <View style={{ gap: spacing.m }}>
-                            <Input
-                                label="What's happening?"
-                                placeholder="Brief summary of your issue"
-                                value={form.subject}
-                                onChangeText={t => setForm(p => ({ ...p, subject: t }))}
-                            />
+                            <View>
+                                <Input
+                                    label="What's happening?"
+                                    placeholder="Brief summary of your issue"
+                                    value={form.subject}
+                                    onChangeText={t => setForm(p => ({ ...p, subject: t }))}
+                                />
+                                <VerificationBadge visible={form.subject.trim().length > 3} style={{ top: 42, right: 12 }} />
+                            </View>
 
                             <View>
                                 <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 }}>
@@ -169,18 +181,48 @@ export const SupportModal = React.memo(({ visible, onClose, theme }: SupportModa
                             </View>
 
                             <View>
-                                <Input
-                                    label="Detailed Message"
-                                    placeholder="Tell us more so we can help you faster..."
-                                    multiline
-                                    numberOfLines={5}
-                                    style={{ height: 140, textAlignVertical: 'top', paddingTop: 12 }}
-                                    value={form.message}
-                                    onChangeText={t => setForm(p => ({ ...p, message: t }))}
-                                />
-                                <Text variant="caption" color={theme.text.tertiary} style={{ alignSelf: 'flex-end', marginTop: 4, marginRight: 4 }}>
-                                    {form.message.length} characters
+                                <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', marginBottom: 8, marginLeft: 4 }}>
+                                    Detailed Message
                                 </Text>
+                                <View>
+                                    <TextInput
+                                        placeholder="Tell us more so we can help you faster..."
+                                        placeholderTextColor={theme.text.tertiary}
+                                        value={form.message}
+                                        onChangeText={t => setForm(p => ({ ...p, message: t }))}
+                                        multiline
+                                        maxLength={1000}
+                                        style={[
+                                            {
+                                                backgroundColor: theme.background.subtle,
+                                                borderRadius: radius.m,
+                                                padding: spacing.m,
+                                                borderWidth: 1.5,
+                                                borderColor: isMessageFocused ? theme.palette.primary[500] : theme.border.subtle,
+                                                color: theme.text.primary,
+                                                fontSize: 16,
+                                                height: 160,
+                                                textAlignVertical: 'top',
+                                            },
+                                            isMessageFocused && {
+                                                backgroundColor: theme.background.default,
+                                                shadowColor: theme.palette.primary[500],
+                                                shadowOffset: { width: 0, height: 4 },
+                                                shadowOpacity: 0.1,
+                                                shadowRadius: 10,
+                                                elevation: 2
+                                            }
+                                        ]}
+                                        onFocus={() => setIsMessageFocused(true)}
+                                        onBlur={() => setIsMessageFocused(false)}
+                                    />
+                                    <VerificationBadge visible={form.message.trim().length > 10} style={{ top: 12, right: 12 }} />
+                                </View>
+                                <View style={{ flexDirection: 'row', justifyContent: 'flex-end', marginTop: 4 }}>
+                                    <Text variant="caption" color={theme.text.tertiary}>
+                                        {form.message.length}/1000
+                                    </Text>
+                                </View>
                             </View>
 
                             <Button
@@ -188,12 +230,12 @@ export const SupportModal = React.memo(({ visible, onClose, theme }: SupportModa
                                 isLoading={isLoading}
                                 onPress={handleSubmit}
                                 style={{ marginTop: spacing.s }}
-                                disabled={!form.subject || !form.message}
+                                disabled={form.subject.trim().length <= 3 || form.message.trim().length <= 10}
                                 rightIcon={<ChevronRight size={18} color="#FFF" />}
                             />
                         </View>
                     </View>
-                </ScrollView>
+                </KeyboardAwareScrollView>
             )}
         </BaseEditModal>
     );

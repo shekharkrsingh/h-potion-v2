@@ -64,11 +64,7 @@ export const useAppInitialization = () => {
                     store.dispatch,
                     () => ({}) // Profile state getter (can be implemented if needed)
                 );
-
-                if (sessionResult) {
-                    // If we have a valid session, connect immediately
-                    await websocketAppointment.connect().catch(e => console.warn('[AppInit] WS Connect failed:', e));
-                }
+                websocketAppointment.initializeAppStateListener();
 
             } catch (error) {
                 console.error('[AppInit] Initialization error:', error);

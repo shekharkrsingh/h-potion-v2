@@ -3,7 +3,7 @@ import SockJS from "sockjs-client";
 import { router } from "expo-router";
 import { AppState, AppStateStatus } from "react-native";
 import { haptics } from "@/utils/haptics";
-import { AppDispatch, store } from "@/store";
+import { AppDispatch, store, RootState } from "@/store";
 import { updateAppointmentLocal, Appointment } from "@/store/slices/appointmentSlice";
 import { addNotification, Notification } from "@/store/slices/notificationSlice";
 import { webSocketEndpoints } from "./websocketEndpoints";
@@ -24,7 +24,7 @@ class WebsocketService {
     private stompClient: Client | null = null;
     private isConnecting = false;
     private reconnectAttempts = 0;
-    private maxReconnectAttempts = 5;
+    private maxReconnectAttempts = 15;
     private reconnectTimeout: NodeJS.Timeout | null = null;
     private appointmentSubscription: StompSubscription | null = null;
     private notificationSubscription: StompSubscription | null = null;
@@ -59,6 +59,13 @@ class WebsocketService {
     public async connect(): Promise<void> {
         if (!this.dispatch || !this.getProfileState) {
             console.warn("WebSocket: Attempted to connect before initialization. Call initialize() first.");
+            return;
+        }
+
+        // Check if authenticated before connecting
+        const state = store.getState() as RootState;
+        if (!state.auth.isAuthenticated) {
+            // Silently return to avoid spamming logs on auth screens
             return;
         }
 
