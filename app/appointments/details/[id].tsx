@@ -223,7 +223,7 @@ export default function AppointmentDetailsScreen() {
         <View style={styles.container}>
             {/* Background Image (Static) */}
             <ImageBackground
-                source={isDark ? require('@assets/doctor_bg_dark.png') : require('@assets/doctor_bg_light.png')}
+                source={isDark ? require('@assets/docbgdark.jpg') : require('@assets/docbglight.jpg')}
                 style={[styles.backgroundImage, { position: 'absolute', width: '100%', height: '100%' }]}
                 resizeMode="cover"
             />

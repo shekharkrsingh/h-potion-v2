@@ -24,7 +24,7 @@ export const SocialLoginButtons = () => {
                     onPress={() => { }}
                 >
                     <Image
-                        source={require('@assets/google_icon.png')}
+                        source={require('@assets/googleicon.png')}
                         style={styles.icon}
                         resizeMode="contain"
                     />
@@ -34,7 +34,7 @@ export const SocialLoginButtons = () => {
                     onPress={() => { }}
                 >
                     <Image
-                        source={require('@assets/apple_logo.png')}
+                        source={require('@assets/applelogo.png')}
                         style={[styles.icon, styles.appleIcon]}
                         resizeMode="contain"
                     />

@@ -53,7 +53,7 @@ export const UpdateRequiredScreen: React.FC<UpdateRequiredScreenProps> = ({ onDi
 
             <View style={styles.heroContainer}>
                 <Image
-                    source={require('@assets/hero_update.png')}
+                    source={require('@assets/heroupdate.jpg')}
                     style={styles.heroImage}
                     resizeMode="cover"
                 />

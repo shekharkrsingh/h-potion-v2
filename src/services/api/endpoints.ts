@@ -1,4 +1,4 @@
-export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'http://ec2-16-16-160-95.eu-north-1.compute.amazonaws.com:8080';
+export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://docterdevserver-1-0.onrender.com';
 
 export const endpoints = {
     auth: {

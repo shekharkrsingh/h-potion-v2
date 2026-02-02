@@ -91,8 +91,7 @@ export default function DashboardScreen() {
     return (
         <View style={styles.container}>
             <ImageBackground
-                source={isDark ? require('@assets/doc_bg_dark.png')
-                    : require('@assets/doc_bg_light.png')
+                source={isDark ? require('@assets/docbgdark.jpg') : require('@assets/docbglight.jpg')}
                 style={styles.background}
             >
                 <ScrollView

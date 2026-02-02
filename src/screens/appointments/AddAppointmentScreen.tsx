@@ -141,7 +141,7 @@ const BookingSummaryModal = memo(({ visible, onConfirm, onCancel, data, isSubmit
                 />
                 <Animated.View style={[styles.summaryContainer, { transform: [{ translateY }] }]}>
                     <ImageBackground
-                        source={isDark ? require('@assets/doc_bg_dark.png') : require('@assets/doc_bg_light.png')}
+                        source={isDark ? require('@assets/docbgdark.jpg') : require('@assets/docbglight.jpg')}
                         style={styles.summaryContentWrapper}
                         imageStyle={styles.summaryImageStyle}
                         blurRadius={20}
@@ -467,7 +467,7 @@ const AddAppointmentScreen = () => {
     return (
         <View style={styles.container}>
             <ImageBackground
-                source={isDark ? require('@assets/doc_bg_dark.png') : require('@assets/doc_bg_light.png')}
+                source={isDark ? require('@assets/docbgdark.jpg') : require('@assets/docbglight.jpg')}
                 style={styles.background}
                 resizeMode="cover"
             >

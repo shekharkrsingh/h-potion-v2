@@ -54,7 +54,7 @@ export const AuthStepLayout: React.FC<AuthStepLayoutProps> = ({
             <StatusBar style="light" translucent backgroundColor="transparent" />
 
             <ImageBackground
-                source={require('@assets/hero_auth.png')}
+                source={require('@assets/heroauth.jpg')}
                 style={styles.heroImage}
                 resizeMode="cover"
             >
