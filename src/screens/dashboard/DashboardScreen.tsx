@@ -91,54 +91,56 @@ export default function DashboardScreen() {
                         />
                     }
                 >
-                    <DashboardHeader
-                        userName={userName}
-                        notificationCount={unreadCount}
-                        transparent={true}
-                        workloadSummary={appointments.length > 0 ? `You have ${appointments.length} appointments today` : 'No appointments today'}
-                        isCollaborator={isCollaborator}
-                    />
-
-                    {statsError && (
-                        <View style={styles.errorContainer}>
-                            <Text style={styles.errorText}>Stats Error: {statsError}</Text>
-                        </View>
-                    )}
-
-                    <FadeInView delay={100} trigger={refreshKey}>
-                        <StatsOverview
-                            data={statsData || {
-                                totalAppointments: 0,
-                                treatedPatients: 0,
-                                availableHours: 0,
-                                completionRate: 0
-                            }}
-                            isLoading={isLoading}
+                    <View style={styles.contentWrapper}>
+                        <DashboardHeader
+                            userName={userName}
+                            notificationCount={unreadCount}
+                            transparent={true}
+                            workloadSummary={appointments.length > 0 ? `You have ${appointments.length} appointments today` : 'No appointments today'}
+                            isCollaborator={isCollaborator}
                         />
-                    </FadeInView>
 
-                    <FadeInView delay={200} trigger={refreshKey}>
-                        <PerformanceMetrics statistics={statsData || undefined} isLoading={isLoading} />
-                    </FadeInView>
+                        {statsError && (
+                            <View style={styles.errorContainer}>
+                                <Text style={styles.errorText}>Stats Error: {statsError}</Text>
+                            </View>
+                        )}
 
-                    <FadeInView delay={300} trigger={refreshKey}>
-                        <ChartsSection statistics={statsData || undefined} isLoading={isLoading} />
-                    </FadeInView>
+                        <FadeInView delay={100} trigger={refreshKey}>
+                            <StatsOverview
+                                data={statsData || {
+                                    totalAppointments: 0,
+                                    treatedPatients: 0,
+                                    availableHours: 0,
+                                    completionRate: 0
+                                }}
+                                isLoading={isLoading}
+                            />
+                        </FadeInView>
 
-                    <FadeInView delay={400} trigger={refreshKey}>
-                        <QuickActions isLoading={isLoading} />
-                    </FadeInView>
+                        <FadeInView delay={200} trigger={refreshKey}>
+                            <PerformanceMetrics statistics={statsData || undefined} isLoading={isLoading} />
+                        </FadeInView>
 
-                    <FadeInView delay={500} trigger={refreshKey}>
-                        <UpcomingAppointments
-                            appointments={displayAppointments}
-                            isLoading={isLoading}
-                        />
-                    </FadeInView>
+                        <FadeInView delay={300} trigger={refreshKey}>
+                            <ChartsSection statistics={statsData || undefined} isLoading={isLoading} />
+                        </FadeInView>
 
-                    <FadeInView delay={600} trigger={refreshKey}>
-                        <RecentActivity notifications={notifications} isLoading={isLoading} />
-                    </FadeInView>
+                        <FadeInView delay={400} trigger={refreshKey}>
+                            <QuickActions isLoading={isLoading} />
+                        </FadeInView>
+
+                        <FadeInView delay={500} trigger={refreshKey}>
+                            <UpcomingAppointments
+                                appointments={displayAppointments}
+                                isLoading={isLoading}
+                            />
+                        </FadeInView>
+
+                        <FadeInView delay={600} trigger={refreshKey}>
+                            <RecentActivity notifications={notifications} isLoading={isLoading} />
+                        </FadeInView>
+                    </View>
                 </ScrollView>
             </ImageBackground>
         </View>

@@ -18,6 +18,11 @@ export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.c
     },
     scrollContent: {
         paddingBottom: 100,
+        alignItems: 'center',
+    },
+    contentWrapper: {
+        width: '100%',
+        maxWidth: 800,
     },
     errorContainer: {
         padding: spacing.m,

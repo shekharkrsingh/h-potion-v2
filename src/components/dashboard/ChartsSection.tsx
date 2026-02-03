@@ -28,8 +28,6 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({ statistics, isLoad
     const { theme } = useTheme();
     const styles = createStyles(theme);
 
-    if (isLoading) return <ChartsSkeleton />;
-
     const lineChartData = useMemo(() => {
         if (!statistics?.lastWeekTreatedData || statistics.lastWeekTreatedData.length === 0) {
             return [];
@@ -85,7 +83,13 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({ statistics, isLoad
         ].filter(item => item.value > 0);
     }, [statistics, theme]);
 
+    const dynamicSpacing = useMemo(() => {
+        if (!lineChartData || lineChartData.length <= 1) return 44;
+        // initialSpacing is 10, and we want some padding at the end
+        return (chartWidth - 20) / (lineChartData.length - 1);
+    }, [lineChartData]);
 
+    if (isLoading) return <ChartsSkeleton />;
     if (!statistics) return null;
 
     const totalPatients = pieChartData.reduce((acc, curr) => acc + curr.value, 0);
@@ -100,7 +104,7 @@ export const ChartsSection: React.FC<ChartsSectionProps> = ({ statistics, isLoad
                             data={lineChartData}
                             width={chartWidth}
                             height={220}
-                            spacing={44}
+                            spacing={dynamicSpacing}
                             color={theme.palette.primary[500]}
                             thickness={4}
                             startFillColor={theme.palette.primary[500]}

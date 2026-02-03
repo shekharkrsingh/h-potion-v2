@@ -20,6 +20,7 @@ export const ShineView: React.FC<ShineViewProps> = ({
     const { isDark, theme } = useTheme();
     const styles = createStyles(theme);
     const shineAnim = useRef(new Animated.Value(-1)).current;
+    const [width, setWidth] = React.useState(0);
 
     useEffect(() => {
         const startAnimation = () => {
@@ -45,7 +46,7 @@ export const ShineView: React.FC<ShineViewProps> = ({
 
     const translateX = shineAnim.interpolate({
         inputRange: [-1, 2],
-        outputRange: [-150, 600],
+        outputRange: [-150, width + 150],
     });
 
     const shineColor = isDark
@@ -53,7 +54,10 @@ export const ShineView: React.FC<ShineViewProps> = ({
         : 'rgba(255, 255, 255, 0.5)';
 
     return (
-        <View style={[styles.container, style]}>
+        <View
+            style={[styles.container, style]}
+            onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
+        >
             {children}
             <View style={{ ...StyleSheet.absoluteFillObject }} pointerEvents="none">
                 <Animated.View
