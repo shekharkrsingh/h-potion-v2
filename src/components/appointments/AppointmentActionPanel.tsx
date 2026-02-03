@@ -1,17 +1,18 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert, Platform } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Platform } from 'react-native';
 import {
     Edit2,
     MapPin,
     CheckCircle2,
     DollarSign,
-    AlertCircle,
-    XCircle,
+    CreditCard,
     Zap,
-    CreditCard
+    XCircle,
+    RotateCcw
 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { Text } from '@/components/ui/Text';
+import { Alert } from 'react-native';
 import {
     canMarkAvailable,
     canMarkUnavailable,
@@ -22,6 +23,7 @@ import {
     canCancel,
     canEdit,
     canMarkEmergency,
+    canReactivate,
     ActionValidation
 } from '@/utils/bookingActionHelpers';
 import { Appointment } from '@/store/slices/appointmentSlice';
@@ -37,6 +39,7 @@ interface AppointmentActionPanelProps {
     onToggleTreated: () => void;
     onToggleEmergency: () => void;
     onCancel: () => void;
+    onReactivate: () => void;
 }
 
 export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
@@ -47,6 +50,7 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
     onToggleTreated,
     onToggleEmergency,
     onCancel,
+    onReactivate,
 }) => {
     const { theme, isDark } = useTheme();
 
@@ -179,8 +183,22 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
             isActive: appointment.isEmergency,
             isDestructive: true
         },
-        // CANCEL
-        {
+        // CANCEL / REACTIVATE
+        (appointment.status === 'CANCELLED' || appointment.status === 'MISSED') ? {
+            id: 'reactivate',
+            label: 'Reactivate',
+            subLabel: 'Booking',
+            icon: RotateCcw,
+
+            // Aesthetic: Success (Green)
+            activeTint: isDark ? theme.palette.secondary[900] : theme.palette.secondary[50],
+            activeBorder: isDark ? theme.palette.secondary[800] : theme.palette.secondary[200],
+            activeText: isDark ? theme.palette.secondary[300] : theme.palette.secondary[700],
+
+            onPress: () => handleAction(canReactivate, onReactivate, 'Reactivate Appointment'),
+            isActive: false,
+            isDestructive: false
+        } : {
             id: 'cancel',
             label: 'Cancel',
             subLabel: 'Booking',
@@ -195,7 +213,7 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
             isActive: false,
             isDestructive: true
         },
-    ], [appointment, theme, isDark, onEdit, onToggleAvailability, onTogglePayment, onToggleTreated, onToggleEmergency, onCancel]);
+    ], [appointment, theme, isDark, onEdit, onToggleAvailability, onTogglePayment, onToggleTreated, onToggleEmergency, onCancel, onReactivate]);
 
     return (
         <View style={styles.container}>
@@ -230,6 +248,11 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
                     if (action.id === 'cancel') {
                         // Keep it clean but show red icon
                         iconColor = theme.status.error;
+                    }
+
+                    // Specific override for "Reactivate" (Success, inactive)
+                    if (action.id === 'reactivate') {
+                        iconColor = theme.status.success;
                     }
 
                     return (

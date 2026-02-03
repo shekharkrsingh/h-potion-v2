@@ -127,7 +127,18 @@ export default function AppointmentDetailsScreen() {
         if (!appointment) return;
         try {
             await dispatch(cancelAppointment(appointment.appointmentId)).unwrap();
-            // Removed handleBack() to allow staying on screen to see "CANCELLED" status
+        } catch (e: any) {
+            Alert.alert('Error', e.message);
+        }
+    }, [appointment, dispatch]);
+
+    const handleReactivate = useCallback(async () => {
+        if (!appointment) return;
+        try {
+            await dispatch(updateAppointment({
+                id: appointment.appointmentId,
+                data: { appointmentStatus: 'ACCEPTED' }
+            })).unwrap();
         } catch (e: any) {
             Alert.alert('Error', e.message);
         }
@@ -141,7 +152,7 @@ export default function AppointmentDetailsScreen() {
     // --- Smart Action Logic ---
     const smartAction = useMemo(() => {
         if (!appointment) return null;
-        if (appointment.status === 'CANCELLED') return null;
+        if (appointment.status === 'CANCELLED' || appointment.status === 'MISSED') return null;
 
         if (!appointment.paymentStatus) {
             return {
@@ -289,7 +300,13 @@ export default function AppointmentDetailsScreen() {
                         <View style={styles.statusRow}>
                             <StatusBadge
                                 label={appointment.status}
-                                color={appointment.status === 'ACCEPTED' ? theme.status.success : appointment.status === 'CANCELLED' ? theme.status.error : theme.palette.secondary[600]}
+                                color={
+                                    appointment.status === 'ACCEPTED' || appointment.status === 'REACTIVATED'
+                                        ? theme.status.success
+                                        : (appointment.status === 'CANCELLED' || appointment.status === 'MISSED')
+                                            ? theme.status.error
+                                            : theme.palette.warning[600]
+                                }
                             />
                             <StatusBadge
                                 label={appointment.appointmentType === 'ONLINE' ? 'Online' : 'In-Person'}
@@ -328,6 +345,7 @@ export default function AppointmentDetailsScreen() {
                             isEmergency: !appointment.isEmergency
                         }))}
                         onCancel={() => handleCancel()}
+                        onReactivate={() => handleReactivate()}
                     />
                 </FadeInView>
 

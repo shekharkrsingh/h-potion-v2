@@ -14,13 +14,13 @@ export const StatusBadge = ({ status, theme, isDark }: StatusBadgeProps) => {
     let color = theme.palette.primary[500];
     let bgColor = `${color}15`;
 
-    if (status === 'ACCEPTED' || status === 'TREATED') {
+    if (status === 'ACCEPTED' || status === 'TREATED' || status === 'REACTIVATED') {
         color = theme.status.success;
         bgColor = theme.status.successBg;
-    } else if (status === 'CANCELLED' || status === 'REJECTED') {
+    } else if (status === 'CANCELLED' || status === 'REJECTED' || status === 'MISSED') {
         color = theme.status.error;
         bgColor = theme.status.errorBg;
-    } else if (status === 'PENDING') {
+    } else if (status === 'PENDING' || status === 'BOOKED') {
         color = theme.status.warning;
         bgColor = theme.status.warningBg;
     }

@@ -68,7 +68,7 @@ export default function DashboardScreen() {
 
     const userName = profile ? `${profile.firstName} ${profile.lastName}` : (user?.name || 'Doctor');
     const displayAppointments = appointments
-        .filter(apt => !apt.treated && apt.status !== 'CANCELLED')
+        .filter(apt => !apt.treated && (apt.status === 'ACCEPTED' || apt.status === 'REACTIVATED' || apt.status === 'BOOKED'))
         .slice(0, 5);
 
     const isLoading = statsLoading && !refreshing && !statsData;

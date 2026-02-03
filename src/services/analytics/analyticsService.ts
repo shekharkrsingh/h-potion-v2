@@ -84,7 +84,7 @@ const collectDeviceMetadata = async (): Promise<AnalyticsDTO> => {
  */
 const sendAnalyticsToBackend = async (metadata: AnalyticsDTO): Promise<boolean> => {
     try {
-        const response = await client.post(POST_ANALYTICS_TRACK, metadata); // Using axios client directly
+        const response = await client.post(POST_ANALYTICS_TRACK, metadata, { skipAuth: true }); // Using axios client directly
         return response.status === 200;
     } catch (error) {
         console.error('[Analytics] Failed to send analytics:', error);

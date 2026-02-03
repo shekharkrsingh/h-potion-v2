@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { client } from '@/services/api/client';
 import { endpoints } from '@/services/api/endpoints';
 
-export type AppointmentStatus = 'BOOKED' | 'ACCEPTED' | 'CANCELLED';
+export type AppointmentStatus = 'BOOKED' | 'ACCEPTED' | 'CANCELLED' | 'MISSED' | 'REACTIVATED';
 export type AppointmentType = 'IN_PERSON' | 'ONLINE';
 
 export interface Appointment {
@@ -63,7 +63,7 @@ export const fetchAppointments = createAsyncThunk(
 
 export const updateAppointment = createAsyncThunk(
     'appointments/update',
-    async ({ id, data }: { id: string; data: Partial<Appointment> }, { rejectWithValue }) => {
+    async ({ id, data }: { id: string; data: any }, { rejectWithValue }) => {
         try {
             const response = await client.put(endpoints.appointments.update(id), data);
             return response.data.data;

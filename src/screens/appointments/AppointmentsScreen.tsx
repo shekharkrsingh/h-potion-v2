@@ -367,7 +367,7 @@ const AppointmentsScreen = () => {
                                 <View style={styles.statusSection}>
                                     <Text style={styles.sectionLabel}>Status</Text>
                                     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsContainer}>
-                                        {['All', 'CONFIRMED', 'PENDING', 'CANCELLED', 'TREATED'].map(s => (
+                                        {['All', 'ACCEPTED', 'PENDING', 'CANCELLED', 'MISSED', 'REACTIVATED', 'TREATED'].map(s => (
                                             <SelectionChip
                                                 key={s}
                                                 label={s === 'All' ? 'Any Status' : s.charAt(0) + s.slice(1).toLowerCase()}

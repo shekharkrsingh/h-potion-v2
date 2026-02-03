@@ -26,7 +26,7 @@ export const checkAppVersion = createAsyncThunk(
     'runtime/checkVersion',
     async (_, { rejectWithValue }) => {
         try {
-            const response = await client.get(endpoints.auth.runtime);
+            const response = await client.get(endpoints.auth.runtime, { skipAuth: true });
             return response.data.data;
         } catch (error: any) {
             return rejectWithValue(error.message);

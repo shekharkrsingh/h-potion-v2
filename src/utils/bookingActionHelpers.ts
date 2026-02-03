@@ -8,15 +8,15 @@ export interface ActionValidation {
 
 // Helper functions for action validation
 export const canMarkAvailable = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked available" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked available" };
     }
     return { allowed: true };
 };
 
 export const canMarkUnavailable = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked unavailable" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked unavailable" };
     }
     if (appointment.treated) {
         return { allowed: false, message: "Treated appointments cannot be marked unavailable" };
@@ -25,29 +25,29 @@ export const canMarkUnavailable = (appointment: Appointment): ActionValidation =
 };
 
 export const canMarkPaid = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked paid" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked paid" };
     }
     return { allowed: true };
 };
 
 export const canMarkUnpaid = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked unpaid" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked unpaid" };
     }
     return { allowed: true, needsConfirmation: true };
 };
 
 export const canMarkTreated = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked treated" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked treated" };
     }
     return { allowed: true };
 };
 
 export const canMarkUntreated = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be unmarked as treated" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be unmarked as treated" };
     }
     return { allowed: true, needsConfirmation: true };
 };
@@ -55,6 +55,9 @@ export const canMarkUntreated = (appointment: Appointment): ActionValidation => 
 export const canCancel = (appointment: Appointment): ActionValidation => {
     if (appointment.status === "CANCELLED") {
         return { allowed: false, message: "Appointment is already cancelled" };
+    }
+    if (appointment.status === "MISSED") {
+        return { allowed: false, message: "Missed appointments cannot be cancelled" };
     }
     if (appointment.treated) {
         return { allowed: false, message: "Treated appointments cannot be cancelled" };
@@ -66,6 +69,9 @@ export const canCancel = (appointment: Appointment): ActionValidation => {
 };
 
 export const canEdit = (appointment: Appointment): ActionValidation => {
+    if (appointment.status === "CANCELLED" || appointment.status === "MISSED") {
+        return { allowed: false, message: "Cancelled or missed appointments cannot be edited" };
+    }
     if (appointment.treated) {
         return { allowed: false, message: "Treated appointments cannot be edited" };
     }
@@ -73,17 +79,26 @@ export const canEdit = (appointment: Appointment): ActionValidation => {
 };
 
 export const canMarkEmergency = (appointment: Appointment): ActionValidation => {
-    if (appointment.status !== "ACCEPTED") {
-        return { allowed: false, message: "Only ACCEPTED appointments can be marked as emergency" };
+    if (appointment.status !== "ACCEPTED" && appointment.status !== "REACTIVATED") {
+        return { allowed: false, message: "Only ACCEPTED or REACTIVATED appointments can be marked as emergency" };
+    }
+    return { allowed: true, needsConfirmation: true };
+};
+
+export const canReactivate = (appointment: Appointment): ActionValidation => {
+    if (appointment.status !== "CANCELLED" && appointment.status !== "MISSED") {
+        return { allowed: false, message: "Only cancelled or missed appointments can be reactivated" };
     }
     return { allowed: true, needsConfirmation: true };
 };
 
 const compareStatus = (a: Appointment["status"], b: Appointment["status"]): number => {
     const priority: Record<Appointment["status"], number> = {
-        ACCEPTED: 1,
-        BOOKED: 2,
-        CANCELLED: 3,
+        REACTIVATED: 1,
+        ACCEPTED: 2,
+        BOOKED: 3,
+        MISSED: 4,
+        CANCELLED: 5,
     };
     return (priority[a] || 99) - (priority[b] || 99);
 };

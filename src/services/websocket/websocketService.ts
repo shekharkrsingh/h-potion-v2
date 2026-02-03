@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { AppState, AppStateStatus } from "react-native";
 import { haptics } from "@/utils/haptics";
 import { AppDispatch, store, RootState } from "@/store";
-import { updateAppointmentLocal, Appointment } from "@/store/slices/appointmentSlice";
+import { updateAppointmentLocal, addAppointmentLocal, Appointment } from "@/store/slices/appointmentSlice";
 import { addNotification, Notification } from "@/store/slices/notificationSlice";
 import { webSocketEndpoints } from "./websocketEndpoints";
 import { getValidToken, getUserId, getDoctorId } from "@/services/auth/tokenService";
@@ -323,7 +323,16 @@ class WebsocketService {
 
             if ('appointmentId' in updatedAppointment && updatedAppointment.appointmentId) {
                 const appointment = updatedAppointment as Appointment;
-                this.dispatch(updateAppointmentLocal(appointment));
+                
+                // Check if appointment exists in store
+                const state = store.getState() as RootState;
+                const exists = state.appointments.appointments.some(a => a.appointmentId === appointment.appointmentId);
+                
+                if (exists) {
+                    this.dispatch(updateAppointmentLocal(appointment));
+                } else {
+                    this.dispatch(addAppointmentLocal(appointment));
+                }
 
                 // Trigger vibration strictly based on Emergency Override setting
                 const { emergencyAlertsEnabled } = store.getState().userSettings;

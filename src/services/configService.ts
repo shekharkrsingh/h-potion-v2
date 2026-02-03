@@ -19,7 +19,7 @@ export const ConfigService = {
     fetchRuntimeConfig: async (): Promise<RuntimeConfig> => {
         // Call runtime config and analytics in parallel
         const [response] = await Promise.all([
-            client.get<ApiResponse<RuntimeConfig>>(endpoints.auth.runtime),
+            client.get<ApiResponse<RuntimeConfig>>(endpoints.auth.runtime, { skipAuth: true }),
             checkAndSendDailyAnalytics().catch(err => {
                 console.warn('[ConfigService] Analytics failed, but continuing:', err);
             })
