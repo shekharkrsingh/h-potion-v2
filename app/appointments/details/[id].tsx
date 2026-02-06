@@ -137,7 +137,7 @@ export default function AppointmentDetailsScreen() {
         try {
             await dispatch(updateAppointment({
                 id: appointment.appointmentId,
-                data: { appointmentStatus: 'ACCEPTED' }
+                data: { appointmentStatus: 'REACTIVATED' }
             })).unwrap();
         } catch (e: any) {
             Alert.alert('Error', e.message);
