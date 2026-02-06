@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/theme/ThemeContext';
 import { createEditComponentStyles } from '@/styles/components/EditComponents.styles';
 import { spacing } from '@/theme/spacing';
+import { getFullImageUrl } from '@/utils/formatters';
 
 interface EditImageHeaderProps {
     profileUri?: string;
@@ -40,6 +41,9 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
         extrapolateRight: 'clamp',
     });
 
+    const [profileError, setProfileError] = React.useState(false);
+    const [coverError, setCoverError] = React.useState(false);
+
     return (
         <View style={styles.headerContainer}>
             <Animated.View style={[
@@ -52,7 +56,8 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
                 }
             ]}>
                 <Image
-                    source={{ uri: coverUri || 'https://img.freepik.com/free-vector/clean-medical-background_53876-97927.jpg' }}
+                    source={{ uri: (!coverError && getFullImageUrl(coverUri)) || 'https://img.freepik.com/free-vector/clean-medical-background_53876-97927.jpg' }}
+                    onError={() => setCoverError(true)}
                     style={styles.coverImage}
                     contentFit="cover"
                     transition={500}
@@ -78,7 +83,8 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
 
             <View style={styles.avatarWrapper}>
                 <Image
-                    source={{ uri: profileUri || 'https://via.placeholder.com/150' }}
+                    source={{ uri: (!profileError && getFullImageUrl(profileUri)) || 'https://via.placeholder.com/150' }}
+                    onError={() => setProfileError(true)}
                     style={styles.profileImage}
                     transition={300}
                 />

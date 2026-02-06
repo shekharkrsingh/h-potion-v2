@@ -19,6 +19,7 @@ import { fetchProfile } from '@/store/slices/profileSlice';
 import { fetchNotifications } from '@/store/slices/notificationSlice';
 
 import { createStyles } from '@/styles/screens/DashboardScreen.styles';
+import { getFullImageUrl } from '@/utils/formatters';
 
 export default function DashboardScreen() {
     const { theme, isDark } = useTheme();
@@ -94,6 +95,7 @@ export default function DashboardScreen() {
                     <View style={styles.contentWrapper}>
                         <DashboardHeader
                             userName={userName}
+                            profileImage={getFullImageUrl(profile?.profilePicture)}
                             notificationCount={unreadCount}
                             transparent={true}
                             workloadSummary={appointments.length > 0 ? `You have ${appointments.length} appointments today` : 'No appointments today'}

@@ -32,6 +32,7 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
     const router = useRouter();
     const insets = useSafeAreaInsets();
     const rotateAnim = useRef(new Animated.Value(0)).current;
+    const [imageError, setImageError] = React.useState(false);
 
     useEffect(() => {
         Animated.loop(
@@ -103,8 +104,12 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         borderRadius: 999
                     }
                 ]}>
-                    {profileImage ? (
-                        <Image source={{ uri: profileImage }} style={styles.avatar} />
+                    {profileImage && !imageError ? (
+                        <Image
+                            source={{ uri: profileImage }}
+                            style={styles.avatar}
+                            onError={() => setImageError(true)}
+                        />
                     ) : (
                         <View style={styles.defaultAvatar}>
                             <User size={24} color={theme.icon.default} />

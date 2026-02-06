@@ -254,7 +254,7 @@ const EditProfileScreen = () => {
                 >
                     <EditImageHeader
                         profileUri={profile?.profilePicture}
-                        coverUri={profile?.coverImage}
+                        coverUri={profile?.coverPicture}
                         onEditProfile={() => handleImageUpdate('profile')}
                         onEditCover={() => handleImageUpdate('cover')}
                         scrollY={scrollY}

@@ -7,12 +7,14 @@ import { Text } from '@/components/ui/Text';
 import { useTheme } from '@/theme/ThemeContext';
 import { createProfileComponentStyles } from '@/styles/components/ProfileComponents.styles';
 import { User } from '@/types/auth';
+import { getFullImageUrl } from '@/utils/formatters';
 
 interface ProfileHeaderProps {
     user: User | null;
     profileName?: string;
     profileEmail?: string;
     profileBio?: string;
+    profileImage?: string; // Explicit prop for fresh profile data
     role?: string;
     onEditPress?: () => void;
     onSettingsPress?: () => void;
@@ -22,13 +24,16 @@ interface ProfileHeaderProps {
 // Dummy cover image for medical theme
 const DUMMY_COVER = 'https://img.freepik.com/free-vector/clean-medical-background_53876-97927.jpg';
 
-export const ProfileHeader = React.memo(({ user, profileName, profileEmail, profileCover, profileBio, role, onEditPress, onSettingsPress }: ProfileHeaderProps & { profileCover?: string }) => {
+export const ProfileHeader = React.memo(({ user, profileName, profileEmail, profileCover, profileBio, profileImage, role, onEditPress, onSettingsPress }: ProfileHeaderProps & { profileCover?: string }) => {
     const { theme } = useTheme();
     const styles = React.useMemo(() => createProfileComponentStyles(theme), [theme]);
 
+    const [profileError, setProfileError] = React.useState(false);
+    const [coverError, setCoverError] = React.useState(false);
+
     const displayName = profileName || user?.name || 'Guest User';
     const displayBio = profileBio || 'No bio available';
-    const coverImageSource = profileCover || DUMMY_COVER;
+    const coverImageSource = (!coverError && getFullImageUrl(profileCover)) || DUMMY_COVER;
 
     const initials = displayName
         .split(' ')
@@ -45,6 +50,7 @@ export const ProfileHeader = React.memo(({ user, profileName, profileEmail, prof
                 source={{ uri: coverImageSource }}
                 style={styles.coverImage}
                 resizeMode="cover"
+                onError={() => setCoverError(true)}
             />
             <LinearGradient
                 colors={['rgba(0,0,0,0.3)', theme.background.default]}
@@ -55,8 +61,12 @@ export const ProfileHeader = React.memo(({ user, profileName, profileEmail, prof
 
             <View style={styles.headerContent}>
                 <View style={styles.avatarContainer}>
-                    {user?.profileImage ? (
-                        <Image source={{ uri: user.profileImage }} style={styles.avatarImage} />
+                    {(!profileError && getFullImageUrl(profileImage || user?.profileImage)) ? (
+                        <Image
+                            source={{ uri: getFullImageUrl(profileImage || user?.profileImage)! }}
+                            style={styles.avatarImage}
+                            onError={() => setProfileError(true)}
+                        />
                     ) : (
                         <Text style={styles.initialsText}>{initials}</Text>
                     )}

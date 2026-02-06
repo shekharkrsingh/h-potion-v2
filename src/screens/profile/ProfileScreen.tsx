@@ -199,7 +199,8 @@ const ProfileScreen = () => {
                         user={user}
                         profileName={fullName}
                         profileEmail={profile?.email}
-                        profileCover={profile?.coverImage}
+                        profileImage={profile?.profilePicture}
+                        profileCover={profile?.coverPicture}
                         profileBio={profile?.bio}
                         role={profileRole || user?.role}
                     />
