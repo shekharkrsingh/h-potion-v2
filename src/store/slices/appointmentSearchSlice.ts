@@ -44,13 +44,21 @@ const appointmentSearchSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-            .addCase(searchAppointments.pending, (state) => {
-                state.isLoading = true;
+            .addCase(searchAppointments.pending, (state, action) => {
+                const criteria = action.meta.arg;
+                if (!criteria || !criteria.page || criteria.page === 0) {
+                    state.isLoading = true;
+                }
                 state.error = null;
             })
             .addCase(searchAppointments.fulfilled, (state, action) => {
                 state.isLoading = false;
-                state.searchResults = action.payload;
+                const criteria = action.meta.arg;
+                if (criteria && criteria.page && criteria.page > 0) {
+                    state.searchResults = [...state.searchResults, ...action.payload];
+                } else {
+                    state.searchResults = action.payload;
+                }
             })
             .addCase(searchAppointments.rejected, (state, action) => {
                 state.isLoading = false;

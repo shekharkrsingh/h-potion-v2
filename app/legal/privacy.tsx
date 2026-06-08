@@ -37,19 +37,71 @@ export default function PrivacyScreen() {
             </View>
 
             <ScrollView ref={scrollViewRef} contentContainerStyle={styles.scrollContent}>
-                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>Information We Collect</Text>
-                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 24, lineHeight: 22 }}>
-                    We collect information to provide better services to all our users — from figuring out basic stuff like which language you speak, to more complex things like which healthcare providers you visit most.
+                <Text variant="caption" color={theme.text.tertiary} style={{ marginBottom: 16 }}>Last Updated: June 8, 2026</Text>
+
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>1. Scope and Roles</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    This Privacy Policy details how H-Potion ("we," "our," or "us") collects, uses, protects, and discloses information in connection with our Services. 
+                    {"\n\n"}
+                    In the context of patient data and Protected Health Information (PHI), H-Potion acts strictly as a **Data Processor** (or Business Associate under HIPAA) on behalf of the registered healthcare provider/practice (the "Data Controller"). The healthcare provider is solely responsible for establishing the legal basis for processing patient data, securing patient consent, and providing all required notices.
                 </Text>
 
-                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>How We Use Information</Text>
-                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 24, lineHeight: 22 }}>
-                    We use the information we collect from all our services to provide, maintain, protect and improve them, to develop new ones, and to protect H-Potion and our users.
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>2. Information We Collect</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    We collect the following categories of information:
+                    {"\n\n"}
+                    • **Account Information**: Name, email address, phone number, credentials, professional details, and licensing details (e.g., license number, authority, expiry date).
+                    {"\n"}
+                    • **Clinical Coordination Data**: Appointment schedules, check-in timestamps, payment status flags, and related practice management logs.
+                    {"\n"}
+                    • **Device & Usage Data**: IP address, device type, operating system version, app crash logs, performance metrics, and application navigation patterns.
                 </Text>
 
-                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>Information We Share</Text>
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>3. Use of Collected Information</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    We use collected information to:
+                    {"\n\n"}
+                    • Provide, operate, and maintain the H-Potion platform.
+                    {"\n"}
+                    • Verify professional credentials and secure user authentication.
+                    {"\n"}
+                    • Improve service speed, troubleshoot code errors, and optimize UX.
+                    {"\n"}
+                    • Send essential system notifications, security alerts, and license expiry warnings.
+                    {"\n\n"}
+                    **Aggregated and De-identified Data**: H-Potion may anonymize, aggregate, and de-identify any user or usage data. H-Potion retains full ownership rights to such aggregated data and may use it for any commercial or non-commercial purpose, including analytics, system training, and business reporting.
+                </Text>
+
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>4. Healthcare Data Privacy (HIPAA Compliance)</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    To the extent that H-Potion has access to Protected Health Information (PHI) or confidential patient records, we protect and maintain such data in strict accordance with the Business Associate Agreement (BAA) executed between H-Potion and the healthcare provider. 
+                    {"\n\n"}
+                    Healthcare providers agree not to upload any patient data to the platform unless they have acquired all necessary consents, authorization, and HIPAA-compliant releases from the patient.
+                </Text>
+
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>5. Data Security and Limitations</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    We implement industry-standard technical, administrative, and physical security controls to safeguard your data. However, no database, internet connection, or mobile application is entirely secure. 
+                    {"\n\n"}
+                    We cannot guarantee absolute security against unauthorized access, hacking, data loss, or breaches. To the maximum extent permitted by law, H-Potion disclaims liability for any damages or breaches resulting from security incidents, unless caused by our gross negligence or willful misconduct.
+                </Text>
+
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>6. Cookies and Tracking Technologies</Text>
+                <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 20, lineHeight: 22 }}>
+                    Our Services utilize cookies, web beacons, local storage tokens, and mobile software development kits (SDKs) to:
+                    {"\n\n"}
+                    • **Maintain Sessions**: Keep you logged in securely and remember authentication states.
+                    {"\n"}
+                    • **Optimize Performance**: Cache screen resources and configurations to load details faster.
+                    {"\n"}
+                    • **Diagnostics**: Track crashes, response times, and API success rates to optimize platform stability.
+                    {"\n\n"}
+                    By continuing to access or use H-Potion, you consent to the storage and use of these tracking mechanisms on your device. You may modify device settings to block cookies/local tokens, though doing so may disable core components of the Services.
+                </Text>
+
+                <Text variant="h4" color={theme.text.primary} style={{ marginBottom: 12 }}>7. Third-Party Links and Services</Text>
                 <Text variant="bodyMedium" color={theme.text.secondary} style={{ marginBottom: 24, lineHeight: 22 }}>
-                    We do not share personal information with companies, organizations and individuals outside of H-Potion unless one of the following circumstances applies: With your consent, for external processing, or for legal reasons.
+                    Our Services may contain links to external sites or integrate with third-party tools. We do not control and are not responsible for the privacy practices, policies, or content of any third-party websites or services.
                 </Text>
             </ScrollView>
         </View>

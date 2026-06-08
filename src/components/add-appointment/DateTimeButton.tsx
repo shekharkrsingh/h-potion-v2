@@ -26,16 +26,16 @@ export const DateTimeButton = memo(({ label, value, icon: Icon, onPress, isDark,
             }
         ]}
     >
-        <View style={styles.contentRow}>
+        <View style={[styles.contentRow, { flex: 1 }]}>
             <View style={[
                 styles.iconContainer,
                 { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)' }
             ]}>
                 <Icon size={16} color={theme.palette.primary[500]} />
             </View>
-            <View>
+            <View style={{ flex: 1, paddingRight: spacing.xs }}>
                 <Text variant="caption" color={theme.text.tertiary} style={styles.label}>{label}</Text>
-                <Text variant="bodyMedium" weight="bold">{value}</Text>
+                <Text variant="bodyMedium" weight="bold" numberOfLines={1} adjustsFontSizeToFit>{value}</Text>
             </View>
         </View>
     </TouchableOpacity>

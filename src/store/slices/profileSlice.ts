@@ -15,6 +15,7 @@ export interface ProfileData {
     coverPicture?: string;
     coverImage?: string; // Legacy/Compat
     doctorId?: string;
+    collaboratorId?: string;
     address?: {
         street: string;
         city: string;
@@ -44,8 +45,17 @@ export interface ProfileData {
     consultationFee?: number;
 
     // Availability
-    availableDays?: string[];
-    availableTimeSlots?: { startTime: string; endTime: string }[];
+    availability?: { day: string; slots: { startTime: string; endTime: string }[] }[];
+
+    // Verification
+    licenseNumber?: string;
+    licensingAuthority?: string;
+    licenseExpiryDate?: string;
+    verificationStatus?: 'PENDING' | 'VERIFIED' | 'REJECTED' | 'SUSPENDED' | 'TERMINATED' | 'DENIED';
+    hasPendingVerification?: boolean;
+    pendingLicenseNumber?: string;
+    pendingLicensingAuthority?: string;
+    pendingLicenseExpiryDate?: string;
 
     // Status
     isAvailable?: boolean;
@@ -121,7 +131,7 @@ export const updateProfilePicture = createAsyncThunk(
                 type: image.type || 'image/jpeg',
             } as any);
 
-            const response = await client.post(endpoints.doctor.updateProfilePicture, formData);
+            const response = await client.put(endpoints.doctor.updateProfilePicture, formData);
             return response.data.data; // Assuming it returns the new image URL
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to update profile picture');
@@ -140,7 +150,7 @@ export const updateCoverPicture = createAsyncThunk(
                 type: image.type || 'image/jpeg',
             } as any);
 
-            const response = await client.post(endpoints.doctor.updateCoverPicture, formData);
+            const response = await client.put(endpoints.doctor.updateCoverPicture, formData);
             return response.data.data;
         } catch (error: any) {
             return rejectWithValue(error.message || 'Failed to update cover picture');

@@ -285,5 +285,24 @@ export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.c
     summaryImageStyle: {
         borderTopLeftRadius: 32,
         borderTopRightRadius: 32,
+    },
+    warningBanner: {
+        flexDirection: 'row',
+        padding: spacing.l,
+        borderRadius: radius.l,
+        borderWidth: 1,
+        borderColor: 'rgba(239, 68, 68, 0.4)',
+        backgroundColor: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.05)',
+        marginBottom: spacing.l,
+        alignItems: 'center',
+        gap: spacing.m,
+    },
+    warningIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(239, 68, 68, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });

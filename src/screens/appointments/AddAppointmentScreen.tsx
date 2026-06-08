@@ -30,9 +30,11 @@ import {
     FileText,
     AlertCircle,
     Zap,
+    Info,
+    X as XIcon,
 } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { useTheme } from '@/theme/ThemeContext';
@@ -42,8 +44,9 @@ import { Toast, ToastType } from '@/components/ui/Toast';
 import { spacing } from '@/theme/spacing';
 import { shadows } from '@/theme/shadows';
 import { radius } from '@/theme/radius';
-import { AppDispatch } from '@/store';
+import { AppDispatch, RootState } from '@/store';
 import { bookAppointment } from '@/store/slices/bookingSlice';
+import { fetchProfile } from '@/store/slices/profileSlice';
 import { haptics } from '@/utils/haptics';
 
 // Sub-components
@@ -239,6 +242,7 @@ const AddAppointmentScreen = () => {
     const { theme, isDark } = useTheme();
     const styles = createStyles(theme, isDark);
     const dispatch = useDispatch<AppDispatch>();
+    const { data: profile } = useSelector((state: RootState) => state.profile);
 
     // Input Refs for Navigation
     const lastRef = useRef<TextInput>(null);
@@ -268,6 +272,7 @@ const AddAppointmentScreen = () => {
     const [showAdditional, setShowAdditional] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
+    const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
 
     const [isDescriptionFocused, setIsDescriptionFocused] = useState(false);
 
@@ -323,7 +328,8 @@ const AddAppointmentScreen = () => {
     useFocusEffect(
         useCallback(() => {
             scrollViewRef.current?.scrollToPosition(0, 0, false);
-        }, [])
+            dispatch(fetchProfile());
+        }, [dispatch])
     );
 
     const handleReasonSelect = useCallback((reason: string) => {
@@ -352,6 +358,18 @@ const AddAppointmentScreen = () => {
     const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') setShowDatePicker(false);
         if (selectedDate && event.type !== 'dismissed') {
+            const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+            const selectedDayName = DAYS_MAP[selectedDate.getDay()];
+            
+            if (profile?.availability && profile.availability.length > 0) {
+                const dayData = profile.availability.find(a => a.day === selectedDayName);
+                if (!dayData) {
+                    const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
+                    showToast(`You are not available on ${prettyDay}s. Please select an available day.`, 'error');
+                    return;
+                }
+            }
+
             setForm(prev => {
                 const current = prev.appointmentDateTime;
                 const newDate = new Date(
@@ -364,7 +382,7 @@ const AddAppointmentScreen = () => {
                 return { ...prev, appointmentDateTime: newDate };
             });
         }
-    }, []);
+    }, [profile, showToast]);
 
     const handleTimeChange = useCallback((event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') setShowTimePicker(false);
@@ -415,6 +433,68 @@ const AddAppointmentScreen = () => {
             showToast('Date must be in the future', 'error');
             return false;
         }
+
+        // Validate availability
+        if (!profile?.availability || profile.availability.length === 0) {
+            showToast('Please configure your availability in your profile first.', 'error');
+            return false;
+        }
+
+        const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+        const selectedDayName = DAYS_MAP[form.appointmentDateTime.getDay()];
+
+        const dayData = profile.availability.find(a => a.day === selectedDayName);
+
+        if (!dayData) {
+            const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
+            showToast(`You are not available on ${prettyDay}s.`, 'error');
+            return false;
+        }
+
+        if (!dayData.slots || dayData.slots.length === 0) {
+            showToast(`You have no time slots configured for ${selectedDayName}.`, 'error');
+            return false;
+        }
+
+        const parseTimeToMinutes = (timeStr: string): number => {
+            const cleanStr = timeStr.trim().toLowerCase();
+            const isPm = cleanStr.includes('pm');
+            const temp = cleanStr.replace(/[^0-9:]/g, '');
+            const [hStr, mStr] = temp.split(':');
+            let hour = parseInt(hStr, 10);
+            const minute = parseInt(mStr, 10);
+            if (hour === 12) {
+                hour = 0;
+            }
+            if (isPm) {
+                hour += 12;
+            }
+            return hour * 60 + minute;
+        };
+
+        const apptMinutes = form.appointmentDateTime.getHours() * 60 + form.appointmentDateTime.getMinutes();
+        let isWithinSlot = false;
+
+        for (const slot of dayData.slots) {
+            try {
+                if (slot.startTime && slot.endTime) {
+                    const startMinutes = parseTimeToMinutes(slot.startTime);
+                    const endMinutes = parseTimeToMinutes(slot.endTime);
+                    if (apptMinutes >= startMinutes && apptMinutes <= endMinutes) {
+                        isWithinSlot = true;
+                        break;
+                    }
+                }
+            } catch (e) {
+                // ignore
+            }
+        }
+
+        if (!isWithinSlot) {
+            showToast('Selected time is outside your configured availability slots.', 'error');
+            return false;
+        }
+
         return true;
     };
 
@@ -513,6 +593,31 @@ const AddAppointmentScreen = () => {
                                 </View>
                             )}
                         </View>
+
+                        {/* Verification Warning Banner */}
+                        {profile?.verificationStatus !== 'VERIFIED' && (
+                            <FadeInView delay={0} duration={300} style={styles.warningBanner}>
+                                <View style={styles.warningIconContainer}>
+                                    <AlertCircle size={20} color="#ef4444" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text variant="bodyMedium" weight="bold" color="#ef4444">
+                                        Booking Restricted
+                                    </Text>
+                                    <Text variant="bodySmall" color={theme.text.secondary} style={{ marginTop: 2 }}>
+                                        {profile?.verificationStatus === 'SUSPENDED'
+                                            ? 'Your practice account is suspended due to license expiry or administrative actions.'
+                                            : profile?.verificationStatus === 'TERMINATED'
+                                            ? 'Your practice account has been terminated.'
+                                            : profile?.verificationStatus === 'DENIED'
+                                            ? 'Your verification request was denied.'
+                                            : profile?.verificationStatus === 'REJECTED'
+                                            ? 'Your verification request was rejected.'
+                                            : 'Your practice account is pending verification. You can book appointments once verified.'}
+                                    </Text>
+                                </View>
+                            </FadeInView>
+                        )}
 
                         {/* Emergency Toggle Card */}
                         <AddAppointmentCard isDark={isDark} theme={theme} delay={50} style={form.isEmergency ? styles.emergencyCard : undefined}>
@@ -637,11 +742,31 @@ const AddAppointmentScreen = () => {
                             <FadeInView duration={600} style={{ width: '100%' }}>
                                 {/* Scheduling Card */}
                                 <AddAppointmentCard delay={100} style={[{ marginTop: spacing.l }, form.isEmergency && styles.emergencyCard]} isDark={isDark} theme={theme}>
-                                    <Text variant="h4" color={theme.palette.primary[500]} weight="bold" style={{ marginBottom: spacing.m }}>Scheduling</Text>
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.m }}>
+                                        <Text variant="h4" color={theme.palette.primary[500]} weight="bold">Scheduling</Text>
+                                        <TouchableOpacity
+                                            onPress={() => { haptics.selection(); setShowAvailabilityInfo(true); }}
+                                            activeOpacity={0.7}
+                                            style={{
+                                                flexDirection: 'row',
+                                                alignItems: 'center',
+                                                gap: 4,
+                                                paddingHorizontal: 10,
+                                                paddingVertical: 5,
+                                                borderRadius: 20,
+                                                backgroundColor: isDark ? 'rgba(14,165,233,0.12)' : 'rgba(14,165,233,0.08)',
+                                                borderWidth: 1,
+                                                borderColor: 'rgba(14,165,233,0.25)',
+                                            }}
+                                        >
+                                            <Info size={13} color={theme.palette.primary[500]} strokeWidth={2.5} />
+                                            <Text variant="caption" color={theme.palette.primary[500]} weight="semibold">Availability</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                     <View style={{ flexDirection: 'row', gap: spacing.m }}>
                                         <DateTimeButton
                                             label="Date"
-                                            value={form.appointmentDateTime.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                                            value={form.appointmentDateTime.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })}
                                             icon={CalendarIcon}
                                             onPress={() => setShowDatePicker(true)}
                                             isDark={isDark}
@@ -807,11 +932,21 @@ const AddAppointmentScreen = () => {
                         <TouchableOpacity
                             onPress={handleSubmit}
                             activeOpacity={0.9}
-                            disabled={isSubmitting}
-                            style={[styles.fabButton, shadows.l]}
+                            disabled={isSubmitting || profile?.verificationStatus !== 'VERIFIED'}
+                            style={[
+                                styles.fabButton,
+                                shadows.l,
+                                profile?.verificationStatus !== 'VERIFIED' && { opacity: 0.6 }
+                            ]}
                         >
                             <LinearGradient
-                                colors={form.isEmergency ? ['#ef4444', '#b91c1c'] : ((theme as any).gradients?.primary || ['#0ea5e9', '#0284c7'])}
+                                colors={
+                                    profile?.verificationStatus !== 'VERIFIED'
+                                        ? ['#6b7280', '#4b5563']
+                                        : form.isEmergency
+                                        ? ['#ef4444', '#b91c1c']
+                                        : ((theme as any).gradients?.primary || ['#0ea5e9', '#0284c7'])
+                                }
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 1 }}
                                 style={styles.gradientButton}
@@ -821,7 +956,11 @@ const AddAppointmentScreen = () => {
                                 ) : (
                                     <>
                                         <Text variant="bodyLarge" color="#FFF" weight="bold" style={{ marginRight: 8 }}>
-                                            {form.isEmergency ? 'Confirm Emergency Service' : 'Confirm Booking'}
+                                            {profile?.verificationStatus !== 'VERIFIED'
+                                                ? 'Verification Required'
+                                                : form.isEmergency
+                                                ? 'Confirm Emergency Service'
+                                                : 'Confirm Booking'}
                                         </Text>
                                         <Check size={20} color="#FFF" strokeWidth={3} />
                                     </>
@@ -865,6 +1004,105 @@ const AddAppointmentScreen = () => {
                         isDark={isDark}
                         styles={styles}
                     />
+
+                    {/* Availability Info Modal */}
+                    <Modal
+                        visible={showAvailabilityInfo}
+                        transparent
+                        statusBarTranslucent
+                        animationType="fade"
+                        onRequestClose={() => setShowAvailabilityInfo(false)}
+                    >
+                        <View style={{
+                            flex: 1,
+                            backgroundColor: 'rgba(0,0,0,0.55)',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: spacing.l,
+                        }}>
+                            <View style={{
+                                backgroundColor: isDark ? '#1e2433' : '#ffffff',
+                                borderRadius: 20,
+                                width: '100%',
+                                maxWidth: 420,
+                                overflow: 'hidden',
+                                shadowColor: '#000',
+                                shadowOffset: { width: 0, height: 8 },
+                                shadowOpacity: 0.3,
+                                shadowRadius: 24,
+                                elevation: 12,
+                            }}>
+                                {/* Header */}
+                                <LinearGradient
+                                    colors={(theme as any).gradients?.primary || ['#0ea5e9', '#0284c7']}
+                                    start={{ x: 0, y: 0 }}
+                                    end={{ x: 1, y: 1 }}
+                                    style={{ padding: spacing.l, paddingBottom: spacing.m }}
+                                >
+                                    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                                            <View style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 10, padding: 6 }}>
+                                                <Info size={18} color="#fff" strokeWidth={2.5} />
+                                            </View>
+                                            <View>
+                                                <Text variant="h4" color="#fff" weight="bold">My Availability</Text>
+                                                <Text variant="caption" color="rgba(255,255,255,0.75)">Patients can book only in these windows</Text>
+                                            </View>
+                                        </View>
+                                        <TouchableOpacity
+                                            onPress={() => setShowAvailabilityInfo(false)}
+                                            style={{ backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, padding: 6 }}
+                                        >
+                                            <XIcon size={16} color="#fff" strokeWidth={2.5} />
+                                        </TouchableOpacity>
+                                    </View>
+                                </LinearGradient>
+
+                                {/* Body */}
+                                <View style={{ padding: spacing.l }}>
+                                    {/* Availability */}
+                                    <View>
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.m }}>
+                                            <CalendarIcon size={15} color={theme.palette.primary[500]} strokeWidth={2} />
+                                            <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', letterSpacing: 0.6 }}>Availability</Text>
+                                        </View>
+                                        {profile?.availability && profile.availability.length > 0 ? (
+                                            <View style={{ gap: 12 }}>
+                                                {profile.availability.map((a: any) => (
+                                                    <View key={a.day} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                                                        <View style={{ width: 85, paddingVertical: 4 }}>
+                                                            <Text variant="caption" weight="semibold" color={theme.palette.primary[500]}>
+                                                                {a.day.charAt(0) + a.day.slice(1).toLowerCase()}
+                                                            </Text>
+                                                        </View>
+                                                        <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
+                                                            {a.slots && a.slots.length > 0 ? a.slots.map((slot: any, idx: number) => (
+                                                                <View key={idx} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: isDark ? 'rgba(14,165,233,0.15)' : 'rgba(14,165,233,0.08)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(14,165,233,0.3)' }}>
+                                                                    <Text variant="caption" color={theme.text.secondary}>{slot.startTime} - {slot.endTime}</Text>
+                                                                </View>
+                                                            )) : <Text variant="caption" color={theme.text.tertiary}>No slots</Text>}
+                                                        </View>
+                                                    </View>
+                                                ))}
+                                            </View>
+                                        ) : (
+                                            <View style={{ padding: spacing.m, backgroundColor: isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
+                                                <Text variant="bodySmall" color="#ef4444">No availability configured. Please update your profile.</Text>
+                                            </View>
+                                        )}
+                                    </View>
+
+                                    {/* Footer note */}
+                                    <View style={{ marginTop: spacing.l, padding: spacing.m, backgroundColor: isDark ? 'rgba(14,165,233,0.08)' : 'rgba(14,165,233,0.06)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(14,165,233,0.18)', flexDirection: 'row', gap: 8 }}>
+                                        <AlertCircle size={14} color={theme.palette.primary[500]} style={{ marginTop: 1 }} />
+                                        <Text variant="caption" color={theme.text.secondary} style={{ flex: 1, lineHeight: 18 }}>
+                                            Appointments outside these windows will be rejected. Update your availability in Profile settings.
+                                        </Text>
+                                    </View>
+                                </View>
+                            </View>
+                        </View>
+                    </Modal>
                 </SafeAreaView>
             </ImageBackground>
         </View>

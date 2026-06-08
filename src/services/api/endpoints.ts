@@ -1,4 +1,6 @@
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_BASE_URL || 'https://docterdevserver-1-0.onrender.com';
+// export const API_BASE_URL = 'http://localhost:8080' ;
+
 
 export const endpoints = {
     auth: {

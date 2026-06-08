@@ -38,6 +38,7 @@ import { LocationModal } from '@/components/profile/edit/modals/LocationModal';
 import { ClinicModal } from '@/components/profile/edit/modals/ClinicModal';
 import { ImagePreviewModal } from '@/components/profile/edit/modals/ImagePreviewModal';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
+import { MedicalVerificationModal } from '@/components/profile/edit/modals/MedicalVerificationModal';
 
 
 // Styles
@@ -54,7 +55,8 @@ import {
     MapPin,
     Calendar,
     Award,
-    Building2
+    Building2,
+    Shield
 } from 'lucide-react-native';
 
 // Local formatters removed in favor of shared utils
@@ -78,10 +80,12 @@ const EditProfileScreen = () => {
         return {
             ...profile,
             phoneNumber: formatPhoneNumber(profile.phoneNumber || ''),
-            selectedDays: profile.availableDays || [],
-            timeSlots: profile.availableTimeSlots || [],
+            availability: profile.availability || [],
             education: Array.isArray(profile.education) ? profile.education : [],
             awards: Array.isArray(profile.achievementsAndAwards) ? profile.achievementsAndAwards : [],
+            licenseNumber: profile.pendingLicenseNumber || profile.licenseNumber || '',
+            licensingAuthority: profile.pendingLicensingAuthority || profile.licensingAuthority || '',
+            licenseExpiryDate: profile.pendingLicenseExpiryDate || profile.licenseExpiryDate || '',
         };
     });
     const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -101,10 +105,12 @@ const EditProfileScreen = () => {
             setFormData({
                 ...profile,
                 phoneNumber: formatPhoneNumber(profile.phoneNumber || ''),
-                selectedDays: profile.availableDays || [],
-                timeSlots: profile.availableTimeSlots || [],
+                availability: profile.availability || [],
                 education: Array.isArray(profile.education) ? profile.education : [],
                 awards: Array.isArray(profile.achievementsAndAwards) ? profile.achievementsAndAwards : [],
+                licenseNumber: profile.pendingLicenseNumber || profile.licenseNumber || '',
+                licensingAuthority: profile.pendingLicensingAuthority || profile.licensingAuthority || '',
+                licenseExpiryDate: profile.pendingLicenseExpiryDate || profile.licenseExpiryDate || '',
             });
         }
     }, [profile, formData]);
@@ -343,9 +349,9 @@ const EditProfileScreen = () => {
                             <EditSectionCard
                                 index={7}
                                 title="Availability"
-                                subtitle={profile?.availableDays?.join(', ')}
+                                subtitle={profile?.availability?.map((a: any) => a.day).join(', ')}
                                 icon={Calendar}
-                                isFilled={!!(profile?.availableDays?.length)}
+                                isFilled={!!(profile?.availability?.length)}
                                 onPress={() => setActiveModal('availability')}
                             />
                         </>
@@ -369,6 +375,20 @@ const EditProfileScreen = () => {
                                 icon={Award}
                                 isFilled={!!(profile?.achievementsAndAwards?.length)}
                                 onPress={() => setActiveModal('awards')}
+                            />
+                            <EditSectionCard
+                                index={10}
+                                title="Medical Verification"
+                                subtitle={
+                                    profile?.hasPendingVerification
+                                        ? `${profile.pendingLicenseNumber || profile.licenseNumber || 'New'} (Pending Review)`
+                                        : profile?.licenseNumber
+                                            ? `${profile.licenseNumber} (${profile.verificationStatus || 'PENDING'})`
+                                            : 'Not submitted'
+                                }
+                                icon={Shield}
+                                isFilled={!!(profile?.licenseNumber || profile?.pendingLicenseNumber)}
+                                onPress={() => setActiveModal('verification')}
                             />
                         </>
                     )}
@@ -495,12 +515,9 @@ const EditProfileScreen = () => {
 
                     {activeModal === 'availability' && (
                         <AvailabilityModal
-                            selectedDays={formData.selectedDays}
-                            timeSlots={formData.timeSlots}
-                            onUpdateDays={(days) => setFormData((p: any) => ({ ...p, selectedDays: days }))}
-                            onAddTimeSlot={(slot) => setFormData((p: any) => ({ ...p, timeSlots: [...p.timeSlots, slot] }))}
-                            onRemoveTimeSlot={(index) => setFormData((p: any) => ({ ...p, timeSlots: p.timeSlots.filter((_: any, i: number) => i !== index) }))}
-                            onSave={() => handleUpdate({ availableDays: formData.selectedDays, availableTimeSlots: formData.timeSlots }, 'Availability updated')}
+                            availability={formData.availability}
+                            onUpdateAvailability={(availability) => setFormData((p: any) => ({ ...p, availability }))}
+                            onSave={() => handleUpdate({ availability: formData.availability }, 'Availability updated')}
                             onClose={handleCloseModal}
                             loading={loading}
                         />
@@ -523,6 +540,20 @@ const EditProfileScreen = () => {
                             items={formData.awards}
                             onUpdateItems={(items) => setFormData((p: any) => ({ ...p, awards: items }))}
                             onSave={() => handleUpdate({ achievementsAndAwards: formData.awards }, 'Awards & Achievements updated')}
+                            onClose={handleCloseModal}
+                            loading={loading}
+                        />
+                    )}
+
+                    {activeModal === 'verification' && (
+                        <MedicalVerificationModal
+                            data={formData}
+                            onUpdate={(updates) => setFormData((p: any) => ({ ...p, ...updates }))}
+                            onSave={() => handleUpdate({
+                                licenseNumber: formData.licenseNumber,
+                                licensingAuthority: formData.licensingAuthority,
+                                licenseExpiryDate: formData.licenseExpiryDate
+                            }, 'Verification details submitted')}
                             onClose={handleCloseModal}
                             loading={loading}
                         />

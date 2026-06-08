@@ -31,11 +31,18 @@ export const CountUpText: React.FC<CountUpTextProps> = ({
     useEffect(() => {
         startTime.current = null;
 
-        if (inputRef.current) {
-            inputRef.current.setNativeProps({
-                text: `${prefix}0${suffix}`
-            });
-        }
+        const updateText = (text: string) => {
+            if (inputRef.current) {
+                if (typeof inputRef.current.setNativeProps === 'function') {
+                    inputRef.current.setNativeProps({ text });
+                } else {
+                    // Web compatibility: direct DOM value manipulation
+                    (inputRef.current as any).value = text;
+                }
+            }
+        };
+
+        updateText(`${prefix}0${suffix}`);
 
         if (targetValue <= 0) return;
 
@@ -48,20 +55,12 @@ export const CountUpText: React.FC<CountUpTextProps> = ({
 
             const nextVal = Math.floor(ease * targetValue);
 
-            if (inputRef.current) {
-                inputRef.current.setNativeProps({
-                    text: `${prefix}${nextVal}${suffix}`
-                });
-            }
+            updateText(`${prefix}${nextVal}${suffix}`);
 
             if (percent < 1) {
                 reqId.current = requestAnimationFrame(animate);
             } else {
-                if (inputRef.current) {
-                    inputRef.current.setNativeProps({
-                        text: `${prefix}${targetValue}${suffix}`
-                    });
-                }
+                updateText(`${prefix}${targetValue}${suffix}`);
             }
         };
 

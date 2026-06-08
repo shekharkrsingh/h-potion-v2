@@ -150,6 +150,8 @@ export const createStyles = (theme: ColorTheme) => StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'space-between',
         marginBottom: spacing.l,
+        position: 'relative',
+        zIndex: 50, // Elevates the entire header (and dropdown child) above the cards
     },
     resultsTitle: {
         fontSize: 22,
@@ -364,5 +366,81 @@ export const createStyles = (theme: ColorTheme) => StyleSheet.create({
         fontWeight: '800',
         color: theme.text.primary,
         letterSpacing: 0.3,
+    },
+    resultsHeaderLeft: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.s,
+    },
+    sortSection: {
+        position: 'relative',
+        zIndex: 100,
+    },
+    sortLabel: {
+        fontSize: 11,
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 0.5,
+        color: theme.text.tertiary,
+        marginRight: spacing.xs,
+    },
+    dropdownSelector: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: spacing.xs,
+        backgroundColor: theme.mode === 'dark' ? '#1e293b' : '#f1f5f9', // Fully solid selector background
+        paddingHorizontal: spacing.m,
+        paddingVertical: 6,
+        borderRadius: radius.m,
+    },
+    dropdownSelectorText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: theme.palette.primary[500],
+    },
+    dropdownContainer: {
+        position: 'absolute',
+        top: 36,
+        right: 0,
+        width: 170,
+        backgroundColor: theme.mode === 'dark' ? '#0f172a' : '#ffffff', // High contrast solid background
+        borderRadius: radius.m,
+        borderWidth: 1,
+        borderColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)', // Thin boundary line
+        overflow: 'hidden',
+        zIndex: 200,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 6 },
+        shadowOpacity: 0.35, // High contrast shadow
+        shadowRadius: 12,
+        elevation: 10,
+    },
+    dropdownItem: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        paddingHorizontal: spacing.m,
+        paddingVertical: 10,
+    },
+    dropdownItemActive: {
+        backgroundColor: theme.mode === 'dark' ? 'rgba(59, 130, 246, 0.25)' : 'rgba(59, 130, 246, 0.1)', // More prominent active item background
+    },
+    dropdownItemText: {
+        fontSize: 13,
+        color: theme.text.secondary,
+        fontWeight: '500',
+    },
+    dropdownItemTextActive: {
+        color: theme.palette.primary[500],
+        fontWeight: '700',
+    },
+    footerLoader: {
+        paddingVertical: spacing.l,
+        alignItems: 'center',
+    },
+    listHeader: {
+        zIndex: 99,
+        elevation: 99,
+        position: 'relative',
     }
 });

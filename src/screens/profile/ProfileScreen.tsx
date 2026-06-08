@@ -131,6 +131,9 @@ const ProfileScreen = () => {
     };
 
     const fullName = profile?.firstName ? `${profile.firstName} ${profile.lastName}` : undefined;
+    const displayVerificationStatus = profile?.licenseNumber 
+        ? (profile.verificationStatus || 'PENDING') 
+        : 'NOT SUBMITTED';
 
     const headerOpacity = scrollY.interpolate({
         inputRange: [50, 120],
@@ -203,6 +206,7 @@ const ProfileScreen = () => {
                         profileCover={profile?.coverPicture}
                         profileBio={profile?.bio}
                         role={profileRole || user?.role}
+                        verificationStatus={displayVerificationStatus}
                     />
 
                     <View style={styles.sectionsWrapper}>
@@ -250,7 +254,7 @@ const ProfileScreen = () => {
 
                                     {isCollaborator ? (
                                         <>
-                                            <DetailRow label="Collaborator ID" value={user?.id || 'N/A'} theme={theme} styles={componentStyles} icon={Hash} />
+                                            <DetailRow label="Collaborator ID" value={profile?.collaboratorId || user?.id || 'N/A'} theme={theme} styles={componentStyles} icon={Hash} />
                                             <DetailRow label="Associated Doctor ID" value={profile?.doctorId || 'N/A'} theme={theme} styles={componentStyles} icon={Shield} />
                                         </>
                                     ) : (
@@ -261,6 +265,21 @@ const ProfileScreen = () => {
 
                                     {!isCollaborator && (
                                         <>
+                                            {profile?.licenseNumber ? (
+                                                <>
+                                                    <DetailRow label="License Number" value={profile.licenseNumber} theme={theme} styles={componentStyles} icon={Shield} />
+                                                    <DetailRow label="Licensing Authority" value={profile.licensingAuthority || 'N/A'} theme={theme} styles={componentStyles} icon={Shield} />
+                                                    <DetailRow 
+                                                        label="License Expiry" 
+                                                        value={profile.licenseExpiryDate 
+                                                            ? new Date(profile.licenseExpiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+                                                            : 'N/A'} 
+                                                        theme={theme} 
+                                                        styles={componentStyles} 
+                                                        icon={Calendar} 
+                                                    />
+                                                </>
+                                            ) : null}
                                             <DetailRow label="Phone" value={formatPhoneNumber(profile?.phoneNumber)} theme={theme} styles={componentStyles} icon={Phone} />
 
                                             <DetailRow
@@ -303,32 +322,31 @@ const ProfileScreen = () => {
                             <FadeInView delay={250} translateYOffset={50}>
                                 <ProfileSection title="Availability">
                                     <View style={{ gap: 16 }}>
-                                        {profile?.availableDays && profile.availableDays.length > 0 && (
-                                            <View>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                                    <Calendar size={16} color={theme.text.tertiary} style={{ marginRight: 8 }} />
-                                                    <Text variant="caption" color={theme.text.tertiary}>Available Days</Text>
-                                                </View>
-                                                <AnimatedChipGroup items={profile.availableDays} theme={theme} styles={componentStyles} />
-                                            </View>
-                                        )}
-
-                                        {profile?.availableTimeSlots && profile.availableTimeSlots.length > 0 && (
-                                            <View>
-                                                <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                                    <Clock size={16} color={theme.text.tertiary} style={{ marginRight: 8 }} />
-                                                    <Text variant="caption" color={theme.text.tertiary}>Time Slots</Text>
-                                                </View>
-                                                <View style={componentStyles.chipContainer}>
-                                                    {profile.availableTimeSlots.map((slot, index) => (
-                                                        <View key={index} style={componentStyles.chip}>
-                                                            <Text variant="caption" weight="medium" color={theme.text.secondary}>
-                                                                {slot.startTime} - {slot.endTime}
+                                        {profile?.availability && profile.availability.length > 0 ? (
+                                            <View style={{ gap: 12 }}>
+                                                {profile.availability.map((a: any) => (
+                                                    <View key={a.day}>
+                                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
+                                                            <Calendar size={14} color={theme.text.tertiary} style={{ marginRight: 6 }} />
+                                                            <Text variant="caption" weight="bold" color={theme.text.tertiary}>
+                                                                {a.day.charAt(0) + a.day.slice(1).toLowerCase()}
                                                             </Text>
                                                         </View>
-                                                    ))}
-                                                </View>
+                                                        <View style={componentStyles.chipContainer}>
+                                                            {a.slots && a.slots.length > 0 ? a.slots.map((slot: any, idx: number) => (
+                                                                <View key={idx} style={componentStyles.chip}>
+                                                                    <Clock size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
+                                                                    <Text variant="caption" weight="medium" color={theme.text.secondary}>
+                                                                        {slot.startTime} - {slot.endTime}
+                                                                    </Text>
+                                                                </View>
+                                                            )) : <Text variant="caption" color={theme.text.tertiary}>No slots configured</Text>}
+                                                        </View>
+                                                    </View>
+                                                ))}
                                             </View>
+                                        ) : (
+                                            <Text variant="caption" color={theme.text.tertiary}>No availability configured.</Text>
                                         )}
                                     </View>
                                 </ProfileSection>
