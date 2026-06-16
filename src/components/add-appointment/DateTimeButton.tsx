@@ -12,9 +12,10 @@ interface DateTimeButtonProps {
     onPress: () => void;
     isDark: boolean;
     theme: ColorTheme;
+    hasError?: boolean;
 }
 
-export const DateTimeButton = memo(({ label, value, icon: Icon, onPress, isDark, theme }: DateTimeButtonProps) => (
+export const DateTimeButton = memo(({ label, value, icon: Icon, onPress, isDark, theme, hasError }: DateTimeButtonProps) => (
     <TouchableOpacity
         onPress={onPress}
         activeOpacity={0.7}
@@ -22,7 +23,7 @@ export const DateTimeButton = memo(({ label, value, icon: Icon, onPress, isDark,
             styles.dateTimeButton,
             {
                 backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                borderColor: theme.border.subtle,
+                borderColor: hasError ? theme.status.error : theme.border.subtle,
             }
         ]}
     >

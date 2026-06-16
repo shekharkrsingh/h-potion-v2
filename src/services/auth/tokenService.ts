@@ -41,15 +41,24 @@ interface DecodedToken {
     [key: string]: any;
 }
 
+let memoryToken: string | null = null;
+let memoryRefreshToken: string | null = null;
+
 export const setToken = async (token: string, refreshToken?: string) => {
+    memoryToken = token;
     await setSecureItem(TOKEN_KEY, token);
     if (refreshToken) {
+        memoryRefreshToken = refreshToken;
         await setSecureItem(REFRESH_TOKEN_KEY, refreshToken);
     }
 };
 
+export const getRefreshToken = async (): Promise<string | null> => {
+    return memoryRefreshToken || await getSecureItem(REFRESH_TOKEN_KEY);
+};
+
 export const getValidToken = async (skipValidation = false): Promise<string | null> => {
-    const token = await getSecureItem(TOKEN_KEY);
+    const token = memoryToken || await getSecureItem(TOKEN_KEY);
     if (!token) return null;
 
     if (skipValidation) return token;
@@ -58,7 +67,10 @@ export const getValidToken = async (skipValidation = false): Promise<string | nu
         const decoded = jwtDecode<DecodedToken>(token);
         const currentTime = Date.now() / 1000;
         if (decoded.exp < currentTime) {
-            await removeToken();
+            // Access token expired — only clear the access token, NOT the refresh token.
+            // The Axios interceptor will use the refresh token to silently renew.
+            memoryToken = null;
+            await deleteSecureItem(TOKEN_KEY);
             return null;
         }
         return token;
@@ -68,6 +80,8 @@ export const getValidToken = async (skipValidation = false): Promise<string | nu
 };
 
 export const removeToken = async () => {
+    memoryToken = null;
+    memoryRefreshToken = null;
     await deleteSecureItem(TOKEN_KEY);
     await deleteSecureItem(REFRESH_TOKEN_KEY);
 };

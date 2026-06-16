@@ -101,11 +101,30 @@ export const restoreSession = createAsyncThunk(
     'auth/restoreSession',
     async (_, { rejectWithValue }) => {
         try {
-            const user = await AuthService.getUserFromToken();
+            // First try: check if we have a valid (non-expired) access token
+            let user = await AuthService.getUserFromToken();
             if (user) {
                 const token = await AuthService.getValidToken();
                 return { token, user };
             }
+
+            // Access token expired or missing — try to refresh using the refresh token
+            const { getRefreshToken } = require('@/services/auth/tokenService');
+            const refreshToken = await getRefreshToken();
+            if (refreshToken) {
+                try {
+                    const newToken = await AuthService.refreshTokens(refreshToken);
+                    if (newToken) {
+                        user = await AuthService.getUserFromToken();
+                        if (user) {
+                            return { token: newToken, user };
+                        }
+                    }
+                } catch {
+                    // Refresh token also expired/revoked — force re-login
+                }
+            }
+
             return rejectWithValue('No valid session');
         } catch (error: any) {
             return rejectWithValue('Session restoration failed');

@@ -26,7 +26,7 @@ export const ProfileCompletionTracker: React.FC<ProfileCompletionTrackerProps> =
                 firstName: 25,
                 lastName: 25,
                 profilePicture: 25,
-                coverImage: 25,
+                coverPicture: 25,
             };
         } else {
             weights = {
@@ -34,7 +34,7 @@ export const ProfileCompletionTracker: React.FC<ProfileCompletionTrackerProps> =
                 lastName: 5,
                 bio: 10,
                 profilePicture: 15,
-                coverImage: 10,
+                coverPicture: 10,
                 phoneNumber: 5,
                 email: 5,
                 specialization: 10,
@@ -50,13 +50,13 @@ export const ProfileCompletionTracker: React.FC<ProfileCompletionTrackerProps> =
             if (profile.firstName) completedPoints += weights.firstName;
             if (profile.lastName) completedPoints += weights.lastName;
             if (profile.profilePicture) completedPoints += weights.profilePicture;
-            if (profile.coverImage) completedPoints += weights.coverImage;
+            if (profile.coverPicture) completedPoints += weights.coverPicture;
         } else {
             if (profile.firstName) completedPoints += weights.firstName;
             if (profile.lastName) completedPoints += weights.lastName;
             if (profile.bio) completedPoints += weights.bio;
             if (profile.profilePicture) completedPoints += weights.profilePicture;
-            if (profile.coverImage) completedPoints += weights.coverImage;
+            if (profile.coverPicture) completedPoints += weights.coverPicture;
             if (profile.phoneNumber) completedPoints += weights.phoneNumber;
             if (profile.email) completedPoints += weights.email;
             if (profile.specialization) completedPoints += weights.specialization;

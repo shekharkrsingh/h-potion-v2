@@ -10,6 +10,8 @@ export const endpoints = {
         verify: '/api/v1/public/verify',
         forgotPassword: '/api/v1/public/forgot-password',
         runtime: '/api/v1/public/app/runtime',
+        refresh: '/api/v1/public/auth/refresh',
+        logout: '/api/v1/public/auth/logout',
     },
     doctor: {
         profile: '/api/v1/doctors/profile',

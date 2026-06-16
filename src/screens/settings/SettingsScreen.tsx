@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { View, TouchableOpacity, Animated, Easing, Alert, Modal, ImageBackground } from 'react-native';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store/hooks';
 import {
@@ -29,6 +30,7 @@ import { EmailModal } from '@/components/settings/modals/EmailModal';
 import { PrivacyModal } from '@/components/settings/modals/PrivacyModal';
 import { SupportModal } from '@/components/settings/modals/SupportModal';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
+import { ThemeSelector } from '@/components/profile/ThemeSelector';
 
 // Styles
 import { createSettingsStyles } from '@/styles/screens/SettingsScreen.styles';
@@ -171,8 +173,15 @@ export default function SettingsScreen() {
                         </>
                     )}
 
-                    <Text style={styles.sectionLabel}>Vibration & Haptics</Text>
+                    <Text style={styles.sectionLabel}>App Preferences</Text>
                     <Animated.View style={[componentStyles.sectionCard, { padding: 16, opacity: fadeAnim, transform: [{ translateY: slideAnims[4] }] }]}>
+                        <View style={{ marginBottom: 12 }}>
+                            <Text variant="bodyMedium" weight="bold" color={theme.text.primary} style={{ marginBottom: 6 }}>
+                                Appearance Theme
+                            </Text>
+                            <ThemeSelector />
+                        </View>
+                        <View style={styles.divider} />
                         <ToggleRow icon={Activity} color={theme.palette.primary[400]} label="Interaction Haptics" description="Feedback for taps and gestures" value={hapticsEnabled} onValueChange={v => handleToggle('Haptics', v, toggleHaptics)} theme={theme} />
                         <View style={styles.divider} />
                         <ToggleRow icon={Bell} color={theme.palette.secondary[400]} label="Messaging Vibration" description="Vibration for new messages" value={notificationsVibrationEnabled} onValueChange={v => handleToggle('Vibration', v, toggleNotificationsVibration)} theme={theme} />
@@ -219,7 +228,7 @@ export default function SettingsScreen() {
                     </Animated.View>
 
                     <View style={styles.footer}>
-                        <Text style={styles.versionText}>H-Potion for Doctors • Version 2.0.1</Text>
+                        <Text style={styles.versionText}>H-Potion for Doctors • Version {Constants.expoConfig?.version || '0.0.6'}</Text>
                         <View style={styles.legalLinks}>
                             <TouchableOpacity onPress={() => router.push('/legal/terms')}><Text style={styles.legalLink}>Terms</Text></TouchableOpacity>
                             <TouchableOpacity onPress={() => router.push('/legal/privacy')}><Text style={styles.legalLink}>Privacy</Text></TouchableOpacity>

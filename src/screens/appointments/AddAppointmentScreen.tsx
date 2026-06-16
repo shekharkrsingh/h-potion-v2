@@ -273,6 +273,7 @@ const AddAppointmentScreen = () => {
     const [refreshing, setRefreshing] = useState(false);
     const [showSummary, setShowSummary] = useState(false);
     const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const [isDescriptionFocused, setIsDescriptionFocused] = useState(false);
 
@@ -358,18 +359,6 @@ const AddAppointmentScreen = () => {
     const handleDateChange = useCallback((event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') setShowDatePicker(false);
         if (selectedDate && event.type !== 'dismissed') {
-            const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
-            const selectedDayName = DAYS_MAP[selectedDate.getDay()];
-            
-            if (profile?.availability && profile.availability.length > 0) {
-                const dayData = profile.availability.find(a => a.day === selectedDayName);
-                if (!dayData) {
-                    const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
-                    showToast(`You are not available on ${prettyDay}s. Please select an available day.`, 'error');
-                    return;
-                }
-            }
-
             setForm(prev => {
                 const current = prev.appointmentDateTime;
                 const newDate = new Date(
@@ -379,10 +368,61 @@ const AddAppointmentScreen = () => {
                     current.getHours(),
                     current.getMinutes()
                 );
+
+                // Real-time validation
+                const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const selectedDayName = DAYS_MAP[newDate.getDay()];
+                const newErrors = { ...errors };
+
+                if (profile?.availability && profile.availability.length > 0) {
+                    const dayData = profile.availability.find(a => a.day === selectedDayName);
+                    if (!dayData) {
+                        const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
+                        newErrors.appointmentDateTime = `You are not available on ${prettyDay}s. Please select an available day.`;
+                        delete newErrors.appointmentTime;
+                    } else {
+                        delete newErrors.appointmentDateTime;
+
+                        if (dayData.slots && dayData.slots.length > 0) {
+                            const apptMinutes = newDate.getHours() * 60 + newDate.getMinutes();
+                            const parseTimeToMinutes = (timeStr: string): number => {
+                                const cleanStr = timeStr.trim().toLowerCase();
+                                const isPm = cleanStr.includes('pm');
+                                const temp = cleanStr.replace(/[^0-9:]/g, '');
+                                const [hStr, mStr] = temp.split(':');
+                                let hour = parseInt(hStr, 10);
+                                const minute = parseInt(mStr, 10);
+                                if (hour === 12) hour = 0;
+                                if (isPm) hour += 12;
+                                return hour * 60 + minute;
+                            };
+
+                            const isWithinSlot = dayData.slots.some((slot: any) => {
+                                try {
+                                    if (slot.startTime && slot.endTime) {
+                                        const startMinutes = parseTimeToMinutes(slot.startTime);
+                                        const endMinutes = parseTimeToMinutes(slot.endTime);
+                                        return apptMinutes >= startMinutes && apptMinutes <= endMinutes;
+                                    }
+                                } catch { }
+                                return false;
+                            });
+
+                            if (!isWithinSlot) {
+                                newErrors.appointmentTime = 'Selected time is outside your configured availability slots.';
+                            } else {
+                                delete newErrors.appointmentTime;
+                            }
+                        } else {
+                            newErrors.appointmentTime = `You have no time slots configured for ${selectedDayName}.`;
+                        }
+                    }
+                }
+                setErrors(newErrors);
                 return { ...prev, appointmentDateTime: newDate };
             });
         }
-    }, [profile, showToast]);
+    }, [profile, errors]);
 
     const handleTimeChange = useCallback((event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') setShowTimePicker(false);
@@ -396,10 +436,61 @@ const AddAppointmentScreen = () => {
                     selectedDate.getHours(),
                     selectedDate.getMinutes()
                 );
+
+                // Real-time validation
+                const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const selectedDayName = DAYS_MAP[newDate.getDay()];
+                const newErrors = { ...errors };
+
+                if (profile?.availability && profile.availability.length > 0) {
+                    const dayData = profile.availability.find(a => a.day === selectedDayName);
+                    if (!dayData) {
+                        const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
+                        newErrors.appointmentDateTime = `You are not available on ${prettyDay}s. Please select an available day.`;
+                        delete newErrors.appointmentTime;
+                    } else {
+                        delete newErrors.appointmentDateTime;
+
+                        if (dayData.slots && dayData.slots.length > 0) {
+                            const apptMinutes = newDate.getHours() * 60 + newDate.getMinutes();
+                            const parseTimeToMinutes = (timeStr: string): number => {
+                                const cleanStr = timeStr.trim().toLowerCase();
+                                const isPm = cleanStr.includes('pm');
+                                const temp = cleanStr.replace(/[^0-9:]/g, '');
+                                const [hStr, mStr] = temp.split(':');
+                                let hour = parseInt(hStr, 10);
+                                const minute = parseInt(mStr, 10);
+                                if (hour === 12) hour = 0;
+                                if (isPm) hour += 12;
+                                return hour * 60 + minute;
+                            };
+
+                            const isWithinSlot = dayData.slots.some((slot: any) => {
+                                try {
+                                    if (slot.startTime && slot.endTime) {
+                                        const startMinutes = parseTimeToMinutes(slot.startTime);
+                                        const endMinutes = parseTimeToMinutes(slot.endTime);
+                                        return apptMinutes >= startMinutes && apptMinutes <= endMinutes;
+                                    }
+                                } catch { }
+                                return false;
+                            });
+
+                            if (!isWithinSlot) {
+                                newErrors.appointmentTime = 'Selected time is outside your configured availability slots.';
+                            } else {
+                                delete newErrors.appointmentTime;
+                            }
+                        } else {
+                            newErrors.appointmentTime = `You have no time slots configured for ${selectedDayName}.`;
+                        }
+                    }
+                }
+                setErrors(newErrors);
                 return { ...prev, appointmentDateTime: newDate };
             });
         }
-    }, []);
+    }, [profile, errors]);
 
     const handleQuickTime = useCallback((hours: number, minutes: number = 0) => {
         haptics.selection();
@@ -414,6 +505,8 @@ const AddAppointmentScreen = () => {
     }, [showToast]);
 
     const validateForm = () => {
+        const newErrors: Record<string, string> = {};
+
         if (!form.firstName.trim()) {
             showToast('First Name is required', 'error');
             return false;
@@ -430,8 +523,7 @@ const AddAppointmentScreen = () => {
 
         const now = new Date();
         if (form.appointmentDateTime <= now && !form.availableAtClinic) {
-            showToast('Date must be in the future', 'error');
-            return false;
+            newErrors.appointmentDateTime = 'Date must be in the future';
         }
 
         // Validate availability
@@ -447,51 +539,53 @@ const AddAppointmentScreen = () => {
 
         if (!dayData) {
             const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
-            showToast(`You are not available on ${prettyDay}s.`, 'error');
-            return false;
-        }
-
-        if (!dayData.slots || dayData.slots.length === 0) {
-            showToast(`You have no time slots configured for ${selectedDayName}.`, 'error');
-            return false;
-        }
-
-        const parseTimeToMinutes = (timeStr: string): number => {
-            const cleanStr = timeStr.trim().toLowerCase();
-            const isPm = cleanStr.includes('pm');
-            const temp = cleanStr.replace(/[^0-9:]/g, '');
-            const [hStr, mStr] = temp.split(':');
-            let hour = parseInt(hStr, 10);
-            const minute = parseInt(mStr, 10);
-            if (hour === 12) {
-                hour = 0;
-            }
-            if (isPm) {
-                hour += 12;
-            }
-            return hour * 60 + minute;
-        };
-
-        const apptMinutes = form.appointmentDateTime.getHours() * 60 + form.appointmentDateTime.getMinutes();
-        let isWithinSlot = false;
-
-        for (const slot of dayData.slots) {
-            try {
-                if (slot.startTime && slot.endTime) {
-                    const startMinutes = parseTimeToMinutes(slot.startTime);
-                    const endMinutes = parseTimeToMinutes(slot.endTime);
-                    if (apptMinutes >= startMinutes && apptMinutes <= endMinutes) {
-                        isWithinSlot = true;
-                        break;
-                    }
+            newErrors.appointmentDateTime = `You are not available on ${prettyDay}s.`;
+        } else if (!dayData.slots || dayData.slots.length === 0) {
+            newErrors.appointmentTime = `You have no time slots configured for ${selectedDayName}.`;
+        } else {
+            const parseTimeToMinutes = (timeStr: string): number => {
+                const cleanStr = timeStr.trim().toLowerCase();
+                const isPm = cleanStr.includes('pm');
+                const temp = cleanStr.replace(/[^0-9:]/g, '');
+                const [hStr, mStr] = temp.split(':');
+                let hour = parseInt(hStr, 10);
+                const minute = parseInt(mStr, 10);
+                if (hour === 12) {
+                    hour = 0;
                 }
-            } catch (e) {
-                // ignore
+                if (isPm) {
+                    hour += 12;
+                }
+                return hour * 60 + minute;
+            };
+
+            const apptMinutes = form.appointmentDateTime.getHours() * 60 + form.appointmentDateTime.getMinutes();
+            let isWithinSlot = false;
+
+            for (const slot of dayData.slots) {
+                try {
+                    if (slot.startTime && slot.endTime) {
+                        const startMinutes = parseTimeToMinutes(slot.startTime);
+                        const endMinutes = parseTimeToMinutes(slot.endTime);
+                        if (apptMinutes >= startMinutes && apptMinutes <= endMinutes) {
+                            isWithinSlot = true;
+                            break;
+                        }
+                    }
+                } catch (e) {
+                    // ignore
+                }
+            }
+
+            if (!isWithinSlot) {
+                newErrors.appointmentTime = 'Selected time is outside your configured availability slots.';
             }
         }
 
-        if (!isWithinSlot) {
-            showToast('Selected time is outside your configured availability slots.', 'error');
+        setErrors(newErrors);
+        if (Object.keys(newErrors).length > 0) {
+            const firstError = Object.values(newErrors)[0];
+            showToast(firstError, 'error');
             return false;
         }
 
@@ -771,6 +865,7 @@ const AddAppointmentScreen = () => {
                                             onPress={() => setShowDatePicker(true)}
                                             isDark={isDark}
                                             theme={theme}
+                                            hasError={!!errors.appointmentDateTime}
                                         />
                                         <DateTimeButton
                                             label="Time"
@@ -779,8 +874,21 @@ const AddAppointmentScreen = () => {
                                             onPress={() => setShowTimePicker(true)}
                                             isDark={isDark}
                                             theme={theme}
+                                            hasError={!!errors.appointmentTime}
                                         />
                                     </View>
+                                    {errors.appointmentDateTime && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>
+                                            <AlertCircle size={14} color={theme.status.error} />
+                                            <Text style={{ color: theme.status.error, fontSize: 12, flex: 1 }}>{errors.appointmentDateTime}</Text>
+                                        </View>
+                                    )}
+                                    {errors.appointmentTime && (
+                                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 10 }}>
+                                            <AlertCircle size={14} color={theme.status.error} />
+                                            <Text style={{ color: theme.status.error, fontSize: 12, flex: 1 }}>{errors.appointmentTime}</Text>
+                                        </View>
+                                    )}
 
                                     {/* Quick Time Chips */}
                                     <View style={styles.quickTimeContainer}>
@@ -1064,32 +1172,34 @@ const AddAppointmentScreen = () => {
                                     <View>
                                         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: spacing.m }}>
                                             <CalendarIcon size={15} color={theme.palette.primary[500]} strokeWidth={2} />
-                                            <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', letterSpacing: 0.6 }}>Availability</Text>
+                                            <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', flexShrink: 0 }} numberOfLines={1}>Availability</Text>
                                         </View>
-                                        {profile?.availability && profile.availability.length > 0 ? (
-                                            <View style={{ gap: 12 }}>
-                                                {profile.availability.map((a: any) => (
-                                                    <View key={a.day} style={{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }}>
+                                        <View style={{ gap: 12 }}>
+                                            {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((dayName) => {
+                                                const a = profile?.availability?.find((item: any) => item.day === dayName);
+                                                const hasSlots = a && a.slots && a.slots.length > 0;
+                                                return (
+                                                    <View key={dayName} style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, !hasSlots && { opacity: 0.7 }]}>
                                                         <View style={{ width: 85, paddingVertical: 4 }}>
-                                                            <Text variant="caption" weight="semibold" color={theme.palette.primary[500]}>
-                                                                {a.day.charAt(0) + a.day.slice(1).toLowerCase()}
+                                                            <Text variant="caption" weight="semibold" color={hasSlots ? theme.palette.primary[500] : theme.text.tertiary}>
+                                                                {dayName.charAt(0) + dayName.slice(1).toLowerCase()}
                                                             </Text>
                                                         </View>
                                                         <View style={{ flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 }}>
-                                                            {a.slots && a.slots.length > 0 ? a.slots.map((slot: any, idx: number) => (
+                                                            {hasSlots ? a.slots.map((slot: any, idx: number) => (
                                                                 <View key={idx} style={{ paddingHorizontal: 8, paddingVertical: 4, backgroundColor: isDark ? 'rgba(14,165,233,0.15)' : 'rgba(14,165,233,0.08)', borderRadius: 6, borderWidth: 1, borderColor: 'rgba(14,165,233,0.3)' }}>
                                                                     <Text variant="caption" color={theme.text.secondary}>{slot.startTime} - {slot.endTime}</Text>
                                                                 </View>
-                                                            )) : <Text variant="caption" color={theme.text.tertiary}>No slots</Text>}
+                                                            )) : (
+                                                                <View style={{ paddingHorizontal: 10, paddingVertical: 4, backgroundColor: theme.status?.errorBg || '#fee2e2' + '20', borderRadius: 6 }}>
+                                                                    <Text variant="caption" weight="medium" color={theme.status?.error || '#ef4444'}>Closed</Text>
+                                                                </View>
+                                                            )}
                                                         </View>
                                                     </View>
-                                                ))}
-                                            </View>
-                                        ) : (
-                                            <View style={{ padding: spacing.m, backgroundColor: isDark ? 'rgba(239,68,68,0.08)' : 'rgba(239,68,68,0.05)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)' }}>
-                                                <Text variant="bodySmall" color="#ef4444">No availability configured. Please update your profile.</Text>
-                                            </View>
-                                        )}
+                                                );
+                                            })}
+                                        </View>
                                     </View>
 
                                     {/* Footer note */}

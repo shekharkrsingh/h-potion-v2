@@ -212,15 +212,53 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
         }
 
         if (selectedDate && event.type !== 'dismissed') {
-            setFormData(prev => {
-                const newDate = new Date(prev.appointmentDateTime);
-                if (showDatePicker) {
-                    newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+            const newDate = new Date(formData.appointmentDateTime);
+            if (showDatePicker) {
+                newDate.setFullYear(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate());
+            } else {
+                newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+            }
+
+            setFormData(prev => ({ ...prev, appointmentDateTime: newDate }));
+
+            // Real-time validation
+            const newErrors = { ...errors };
+            if (profile?.availability && profile.availability.length > 0) {
+                const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
+                const selectedDayName = DAYS_MAP[newDate.getDay()];
+                const dayData = profile.availability.find((a: any) => a.day === selectedDayName);
+
+                if (!dayData) {
+                    const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
+                    newErrors.appointmentDateTime = `You are not available on ${prettyDay}s. Please select an available day.`;
+                    delete newErrors.appointmentTime;
                 } else {
-                    newDate.setHours(selectedDate.getHours(), selectedDate.getMinutes());
+                    delete newErrors.appointmentDateTime;
+
+                    if (dayData.slots && dayData.slots.length > 0) {
+                        const apptMinutes = newDate.getHours() * 60 + newDate.getMinutes();
+                        const isWithinSlot = dayData.slots.some((slot: any) => {
+                            try {
+                                if (slot.startTime && slot.endTime) {
+                                    const startMinutes = parseTimeToMinutes(slot.startTime);
+                                    const endMinutes = parseTimeToMinutes(slot.endTime);
+                                    return apptMinutes >= startMinutes && apptMinutes <= endMinutes;
+                                }
+                            } catch { }
+                            return false;
+                        });
+
+                        if (!isWithinSlot) {
+                            newErrors.appointmentTime = 'Selected time is outside your configured availability slots.';
+                        } else {
+                            delete newErrors.appointmentTime;
+                        }
+                    } else {
+                        newErrors.appointmentTime = `You have no time slots configured for ${selectedDayName}.`;
+                    }
                 }
-                return { ...prev, appointmentDateTime: newDate };
-            });
+            }
+            setErrors(newErrors);
         }
     };
 
@@ -342,7 +380,11 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
 
                             <View style={{ flexDirection: 'row', gap: spacing.m }}>
                                 <TouchableOpacity
-                                    style={[commonStyles.premiumInput, { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }]}
+                                    style={[
+                                        commonStyles.premiumInput,
+                                        { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+                                        errors.appointmentDateTime ? { borderColor: theme.status.error } : null
+                                    ]}
                                     onPress={() => { setShowDatePicker(true); setShowTimePicker(false); }}
                                 >
                                     <Calendar size={18} color={theme.palette.primary[500]} />
@@ -352,7 +394,11 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                                 </TouchableOpacity>
 
                                 <TouchableOpacity
-                                    style={[commonStyles.premiumInput, { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 }]}
+                                    style={[
+                                        commonStyles.premiumInput,
+                                        { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 8 },
+                                        errors.appointmentTime ? { borderColor: theme.status.error } : null
+                                    ]}
                                     onPress={() => { setShowTimePicker(true); setShowDatePicker(false); }}
                                 >
                                     <Clock size={18} color={theme.palette.primary[500]} />
@@ -362,10 +408,16 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                                 </TouchableOpacity>
                             </View>
                             {errors.appointmentDateTime && (
-                                <Text style={{ color: theme.status.error, fontSize: 12, marginTop: 4 }}>{errors.appointmentDateTime}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                                    <AlertCircle size={14} color={theme.status.error} />
+                                    <Text style={{ color: theme.status.error, fontSize: 12, flex: 1 }}>{errors.appointmentDateTime}</Text>
+                                </View>
                             )}
                             {errors.appointmentTime && (
-                                <Text style={{ color: theme.status.error, fontSize: 12, marginTop: 4 }}>{errors.appointmentTime}</Text>
+                                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                                    <AlertCircle size={14} color={theme.status.error} />
+                                    <Text style={{ color: theme.status.error, fontSize: 12, flex: 1 }}>{errors.appointmentTime}</Text>
+                                </View>
                             )}
 
                             {(showDatePicker || showTimePicker) && (

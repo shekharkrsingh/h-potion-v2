@@ -61,7 +61,11 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
     };
 
     const formatTime = (date: Date) => {
-        return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true });
+        let timeStr = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        if (/^\d:/.test(timeStr)) {
+            timeStr = '0' + timeStr;
+        }
+        return timeStr.toUpperCase();
     };
 
     const handleTimeChange = (event: any, selectedDate?: Date) => {

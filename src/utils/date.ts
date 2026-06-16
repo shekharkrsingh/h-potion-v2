@@ -1,25 +1,32 @@
 /**
- * Formats a date string or Java-style date array [yyyy, mm, dd] into a localized string.
- * @param dateInput - The date input to format.
- * @returns A localized date string or 'Unknown Date'.
+ * Formats a date string, Java-style date array [yyyy, mm, dd], or timestamp into a localized string.
+ * @param dateInput - The date input to format (ISO string, array, or numeric timestamp).
+ * @param options   - Optional Intl.DateTimeFormatOptions for custom formatting.
+ * @returns A localized date string or 'N/A'.
  */
-export const formatDate = (dateInput: any): string => {
-    if (!dateInput) return 'Unknown Date';
+export const formatDate = (
+    dateInput: any,
+    options?: Intl.DateTimeFormatOptions
+): string => {
+    if (!dateInput) return 'N/A';
 
     try {
-        // Handle array format [yyyy, mm, dd, ...] common in Java/Spring responses
+        let date: Date;
+
+        // Handle Java array format [yyyy, mm, dd, ...]
         if (Array.isArray(dateInput)) {
-            // new Date(year, monthIndex, day) -> month is 0-indexed in JS
-            const date = new Date(dateInput[0], dateInput[1] - 1, dateInput[2]);
-            return isNaN(date.getTime()) ? 'Invalid Date' : date.toLocaleDateString();
+            date = new Date(dateInput[0], dateInput[1] - 1, dateInput[2]);
+        } else {
+            date = new Date(dateInput);
         }
 
-        // Handle standard string/timestamp
-        const date = new Date(dateInput);
-        if (isNaN(date.getTime())) return 'Invalid Date';
-        return date.toLocaleDateString();
+        if (isNaN(date.getTime())) return 'N/A';
+
+        return options
+            ? date.toLocaleDateString(undefined, options)
+            : date.toLocaleDateString();
     } catch (e) {
-        console.error("Date formatting error:", e);
-        return 'Invalid Date';
+        console.error('Date formatting error:', e);
+        return 'N/A';
     }
 };

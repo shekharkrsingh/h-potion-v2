@@ -45,7 +45,7 @@ export const UpcomingAppointments: React.FC<UpcomingAppointmentsProps> = ({ appo
         <View style={styles.container}>
             <SectionHeader
                 title="Daily Appointments"
-                onActionPress={() => router.push('/appointments')}
+                onActionPress={() => router.push('/booking')}
             />
             <View style={styles.list}>
                 {isLoading ? (

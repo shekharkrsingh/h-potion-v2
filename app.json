@@ -3,7 +3,7 @@
     "name": "H Potion",
     "slug": "hpotion",
     "scheme": "hpotion",
-    "version": "0.0.4",
+    "version": "0.0.6",
     "orientation": "portrait",
     "icon": "./assets/logo.png",
     "userInterfaceStyle": "automatic",
@@ -57,7 +57,7 @@
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "3eb53d50-7e49-4ad5-9e8b-03e191b29540"
+        "projectId": "fe5bc1d2-0351-436f-a973-b8e5dc4056a1"
       }
     }
   }

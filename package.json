@@ -1,6 +1,6 @@
 {
   "name": "hpotion",
-  "version": "0.0.4",
+  "version": "0.0.6",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
@@ -17,6 +17,7 @@
     "@stomp/stompjs": "^7.2.1",
     "axios": "^1.13.4",
     "date-fns": "^4.1.0",
+    "eas-cli": "^20.1.0",
     "expo": "^54.0.33",
     "expo-blur": "~15.0.8",
     "expo-camera": "~17.0.10",

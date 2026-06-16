@@ -260,7 +260,15 @@ export default function AppointmentDetailsScreen() {
                 <Animated.View style={{ opacity: headerOpacity, marginTop: 10 }}>
                     <Text style={styles.headerTitle}>Details</Text>
                 </Animated.View>
-                <TouchableOpacity style={[styles.iconButton, { marginTop: 10 }]} onPress={() => setIsEditModalVisible(true)}>
+                <TouchableOpacity 
+                    style={[
+                        styles.iconButton, 
+                        { marginTop: 10 }, 
+                        (appointment?.treated || appointment?.status === 'CANCELLED' || appointment?.status === 'MISSED') && { opacity: 0.4 }
+                    ]} 
+                    onPress={() => setIsEditModalVisible(true)}
+                    disabled={appointment?.treated || appointment?.status === 'CANCELLED' || appointment?.status === 'MISSED'}
+                >
                     <MoreVertical size={24} color={theme.text.primary} />
                 </TouchableOpacity>
             </Animated.View>

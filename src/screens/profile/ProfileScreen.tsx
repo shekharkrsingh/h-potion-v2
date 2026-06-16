@@ -3,6 +3,7 @@ import { View, ScrollView, Alert, ImageBackground, Animated, RefreshControl, Tou
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Constants from 'expo-constants';
 import {
     User,
     Settings,
@@ -40,11 +41,12 @@ import { createProfileComponentStyles } from '@/styles/components/ProfileCompone
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfileSection } from '@/components/profile/ProfileSection';
 import { ProfileOption } from '@/components/profile/ProfileOption';
-import { ThemeSelector } from '@/components/profile/ThemeSelector';
 import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { DetailRow } from '@/components/profile/DetailRow';
 import { AnimatedChipGroup } from '@/components/profile/AnimatedChipGroup';
 import { formatPhoneNumber } from '@/utils/formatters';
+import { formatDate } from '@/utils/date';
+
 
 const ProfileScreen = () => {
     const { theme, isDark } = useTheme();
@@ -56,7 +58,6 @@ const ProfileScreen = () => {
     const styles = useMemo(() => createProfileScreenStyles(theme), [theme]);
     const componentStyles = useMemo(() => createProfileComponentStyles(theme), [theme]);
 
-    const [isThemeExpanded, setIsThemeExpanded] = useState(false);
     const [isAboutExpanded, setIsAboutExpanded] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
     const scrollY = useRef(new Animated.Value(0)).current;
@@ -265,21 +266,6 @@ const ProfileScreen = () => {
 
                                     {!isCollaborator && (
                                         <>
-                                            {profile?.licenseNumber ? (
-                                                <>
-                                                    <DetailRow label="License Number" value={profile.licenseNumber} theme={theme} styles={componentStyles} icon={Shield} />
-                                                    <DetailRow label="Licensing Authority" value={profile.licensingAuthority || 'N/A'} theme={theme} styles={componentStyles} icon={Shield} />
-                                                    <DetailRow 
-                                                        label="License Expiry" 
-                                                        value={profile.licenseExpiryDate 
-                                                            ? new Date(profile.licenseExpiryDate).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-                                                            : 'N/A'} 
-                                                        theme={theme} 
-                                                        styles={componentStyles} 
-                                                        icon={Calendar} 
-                                                    />
-                                                </>
-                                            ) : null}
                                             <DetailRow label="Phone" value={formatPhoneNumber(profile?.phoneNumber)} theme={theme} styles={componentStyles} icon={Phone} />
 
                                             <DetailRow
@@ -312,6 +298,35 @@ const ProfileScreen = () => {
                                     <View style={{ gap: 4 }}>
                                         <DetailRow label="Specialization" value={profile?.specialization || 'N/A'} theme={theme} styles={componentStyles} icon={Activity} />
                                         <DetailRow label="Experience" value={profile?.yearsOfExperience ? `${profile.yearsOfExperience} Years` : 'N/A'} theme={theme} styles={componentStyles} icon={Briefcase} />
+                                        
+                                        {(profile?.pendingLicenseNumber || profile?.licenseNumber) && (
+                                            <>
+                                                <DetailRow 
+                                                    label="License Number" 
+                                                    value={`${profile.pendingLicenseNumber || profile.licenseNumber}${profile.pendingLicenseNumber ? ' (Pending)' : ''}`} 
+                                                    theme={theme} 
+                                                    styles={componentStyles} 
+                                                    icon={Shield} 
+                                                />
+                                                <DetailRow 
+                                                    label="Licensing Authority" 
+                                                    value={profile.pendingLicensingAuthority || profile.licensingAuthority || 'N/A'} 
+                                                    theme={theme} 
+                                                    styles={componentStyles} 
+                                                    icon={Shield} 
+                                                />
+                                                <DetailRow 
+                                                    label="License Expiry" 
+                                                    value={formatDate(
+                                                        profile.pendingLicenseExpiryDate || profile.licenseExpiryDate,
+                                                        { year: 'numeric', month: 'long', day: 'numeric' }
+                                                    )} 
+                                                    theme={theme} 
+                                                    styles={componentStyles} 
+                                                    icon={Calendar} 
+                                                />
+                                            </>
+                                        )}
                                     </View>
                                 </ProfileSection>
                             </FadeInView>
@@ -321,33 +336,50 @@ const ProfileScreen = () => {
                         {!isCollaborator && (
                             <FadeInView delay={250} translateYOffset={50}>
                                 <ProfileSection title="Availability">
-                                    <View style={{ gap: 16 }}>
-                                        {profile?.availability && profile.availability.length > 0 ? (
-                                            <View style={{ gap: 12 }}>
-                                                {profile.availability.map((a: any) => (
-                                                    <View key={a.day}>
-                                                        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 8 }}>
-                                                            <Calendar size={14} color={theme.text.tertiary} style={{ marginRight: 6 }} />
-                                                            <Text variant="caption" weight="bold" color={theme.text.tertiary}>
-                                                                {a.day.charAt(0) + a.day.slice(1).toLowerCase()}
+                                    <View>
+                                        <View>
+                                            {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((dayName, index, arr) => {
+                                                const a = profile?.availability?.find((item: any) => item.day === dayName);
+                                                const isLast = index === arr.length - 1;
+                                                const hasSlots = a && a.slots && a.slots.length > 0;
+                                                
+                                                return (
+                                                    <View
+                                                        key={dayName}
+                                                        style={[
+                                                            componentStyles.availabilityRow,
+                                                            isLast && componentStyles.availabilityRowLast,
+                                                            !hasSlots && { opacity: 0.7 }
+                                                        ]}
+                                                    >
+                                                        <View style={componentStyles.dayCol}>
+                                                            <Calendar size={14} color={hasSlots ? theme.palette.primary[500] : theme.text.tertiary} style={{ marginRight: 6 }} />
+                                                            <Text variant="bodyMedium" weight="bold" color={hasSlots ? theme.text.primary : theme.text.secondary}>
+                                                                {dayName.substring(0, 3)}
                                                             </Text>
                                                         </View>
-                                                        <View style={componentStyles.chipContainer}>
-                                                            {a.slots && a.slots.length > 0 ? a.slots.map((slot: any, idx: number) => (
-                                                                <View key={idx} style={componentStyles.chip}>
-                                                                    <Clock size={12} color={theme.text.secondary} style={{ marginRight: 4 }} />
-                                                                    <Text variant="caption" weight="medium" color={theme.text.secondary}>
-                                                                        {slot.startTime} - {slot.endTime}
-                                                                    </Text>
-                                                                </View>
-                                                            )) : <Text variant="caption" color={theme.text.tertiary}>No slots configured</Text>}
+                                                        <View style={componentStyles.slotsCol}>
+                                                            <View style={componentStyles.chipContainer}>
+                                                                {hasSlots ? a.slots.map((slot: any, idx: number) => (
+                                                                    <View key={idx} style={componentStyles.chip}>
+                                                                        <Clock size={14} color={theme.palette.primary[500]} style={{ marginRight: 6 }} />
+                                                                        <Text variant="caption" weight="medium" color={theme.text.secondary}>
+                                                                            {slot.startTime} - {slot.endTime}
+                                                                        </Text>
+                                                                    </View>
+                                                                )) : (
+                                                                    <View style={[componentStyles.chip, { backgroundColor: theme.status?.errorBg || '#fee2e2' + '20', borderColor: 'transparent', paddingVertical: 4, paddingHorizontal: 10 }]}>
+                                                                        <Text variant="caption" weight="medium" color={theme.status?.error || '#ef4444'}>
+                                                                            Closed
+                                                                        </Text>
+                                                                    </View>
+                                                                )}
+                                                            </View>
                                                         </View>
                                                     </View>
-                                                ))}
-                                            </View>
-                                        ) : (
-                                            <Text variant="caption" color={theme.text.tertiary}>No availability configured.</Text>
-                                        )}
+                                                );
+                                            })}
+                                        </View>
                                     </View>
                                 </ProfileSection>
                             </FadeInView>
@@ -416,20 +448,8 @@ const ProfileScreen = () => {
                                     label="Settings"
                                     icon={Settings}
                                     onPress={() => router.push({ pathname: '/settings', params: { reset: 'true' } })}
+                                    showDivider={false}
                                 />
-                                <View>
-                                    <ProfileOption
-                                        label="Appearance"
-                                        icon={isThemeExpanded ? ChevronUp : ChevronDown}
-                                        onPress={() => setIsThemeExpanded(!isThemeExpanded)}
-                                        showDivider={false}
-                                    />
-                                    {isThemeExpanded && (
-                                        <View style={{ paddingVertical: 8, paddingHorizontal: 12 }}>
-                                            <ThemeSelector />
-                                        </View>
-                                    )}
-                                </View>
                             </ProfileSection>
                         </FadeInView>
 
@@ -449,7 +469,7 @@ const ProfileScreen = () => {
                         </FadeInView>
 
                         <Text style={styles.versionText} variant="caption">
-                            Version 0.0.3 (Build 2026.02.01)
+                            Version {Constants.expoConfig?.version || '0.0.6'} (Build 2026.02.01)
                         </Text>
                     </View>
                 </Animated.ScrollView>

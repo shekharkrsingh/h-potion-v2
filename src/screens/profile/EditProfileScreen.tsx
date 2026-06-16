@@ -26,6 +26,16 @@ import { Text } from '@/components/ui/Text';
 import { pickImage } from '@/utils/imagePicker';
 import { formatPhoneNumber } from '@/utils/formatters';
 
+/** Normalizes any backend date format (array, timestamp, ISO string) to an ISO string. */
+const normalizeToISO = (dateInput: any): string => {
+    if (!dateInput) return '';
+    if (Array.isArray(dateInput)) {
+        return new Date(dateInput[0], dateInput[1] - 1, dateInput[2]).toISOString();
+    }
+    const d = new Date(dateInput);
+    return isNaN(d.getTime()) ? '' : d.toISOString();
+};
+
 // Modular Components
 import { EditImageHeader } from '@/components/profile/edit/EditImageHeader';
 import { EditSectionCard } from '@/components/profile/edit/EditSectionCard';
@@ -85,7 +95,7 @@ const EditProfileScreen = () => {
             awards: Array.isArray(profile.achievementsAndAwards) ? profile.achievementsAndAwards : [],
             licenseNumber: profile.pendingLicenseNumber || profile.licenseNumber || '',
             licensingAuthority: profile.pendingLicensingAuthority || profile.licensingAuthority || '',
-            licenseExpiryDate: profile.pendingLicenseExpiryDate || profile.licenseExpiryDate || '',
+            licenseExpiryDate: normalizeToISO(profile.pendingLicenseExpiryDate || profile.licenseExpiryDate),
         };
     });
     const [activeModal, setActiveModal] = useState<string | null>(null);
@@ -110,7 +120,7 @@ const EditProfileScreen = () => {
                 awards: Array.isArray(profile.achievementsAndAwards) ? profile.achievementsAndAwards : [],
                 licenseNumber: profile.pendingLicenseNumber || profile.licenseNumber || '',
                 licensingAuthority: profile.pendingLicensingAuthority || profile.licensingAuthority || '',
-                licenseExpiryDate: profile.pendingLicenseExpiryDate || profile.licenseExpiryDate || '',
+                licenseExpiryDate: normalizeToISO(profile.pendingLicenseExpiryDate || profile.licenseExpiryDate),
             });
         }
     }, [profile, formData]);
@@ -150,7 +160,7 @@ const EditProfileScreen = () => {
             showToast(successMessage || 'Profile updated successfully', 'success');
             setActiveModal(null);
         } catch (err: any) {
-            showToast(err.message || 'Update Failed', 'error');
+            showToast((typeof err === 'string' ? err : err?.message) || 'Update Failed', 'error');
         } finally {
             setLoading(false);
         }
@@ -167,7 +177,7 @@ const EditProfileScreen = () => {
                 });
             }
         }).catch((err: any) => {
-            showToast(err.message || 'Pick Failed', 'error');
+            showToast((typeof err === 'string' ? err : err?.message) || 'Pick Failed', 'error');
         });
     }, [showToast]);
 
@@ -188,7 +198,7 @@ const EditProfileScreen = () => {
             showToast(`${previewImage.type === 'profile' ? 'Profile' : 'Cover'} updated`, 'success');
             setPreviewImage(null);
         } catch (err: any) {
-            showToast(err.message || 'Upload Failed', 'error');
+            showToast((typeof err === 'string' ? err : err?.message) || 'Upload Failed', 'error');
         } finally {
             setLoading(false);
         }

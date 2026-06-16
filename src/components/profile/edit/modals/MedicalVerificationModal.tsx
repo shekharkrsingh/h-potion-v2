@@ -14,7 +14,7 @@ interface MedicalVerificationModalProps {
     data: {
         licenseNumber?: string;
         licensingAuthority?: string;
-        licenseExpiryDate?: string | Date;
+        licenseExpiryDate?: string;
         hasPendingVerification?: boolean;
     };
     onUpdate: (updates: any) => void;
@@ -36,10 +36,10 @@ export const MedicalVerificationModal: React.FC<MedicalVerificationModalProps> =
 
     const [showDatePicker, setShowDatePicker] = useState(false);
 
-    const expiryDate = useMemo(() => {
-        if (!data.licenseExpiryDate) return new Date();
-        return new Date(data.licenseExpiryDate);
-    }, [data.licenseExpiryDate]);
+    // Backend always sends ISO string (guaranteed by @JsonFormat in DoctorProfileDTO)
+    const expiryDate = useMemo(() =>
+        data.licenseExpiryDate ? new Date(data.licenseExpiryDate) : new Date()
+    , [data.licenseExpiryDate]);
 
     const handleDateChange = (event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') {
@@ -140,7 +140,7 @@ export const MedicalVerificationModal: React.FC<MedicalVerificationModalProps> =
                     >
                         <Calendar size={18} color={theme.text.tertiary} />
                         <Text style={{ color: data.licenseExpiryDate ? theme.text.primary : theme.text.tertiary }}>
-                            {data.licenseExpiryDate 
+                            {data.licenseExpiryDate && !isNaN(expiryDate.getTime())
                                 ? expiryDate.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
                                 : 'Select Expiry Date'}
                         </Text>

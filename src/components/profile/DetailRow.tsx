@@ -28,6 +28,8 @@ export const DetailRow = React.memo(({ label, value, theme, styles, icon: Icon }
 
                 const isLikelyCountable = !isNaN(numericVal) &&
                     !label.toLowerCase().includes('date') &&
+                    !label.toLowerCase().includes('expiry') &&
+                    !label.toLowerCase().includes('license') &&
                     !label.toLowerCase().includes('id') &&
                     !label.toLowerCase().includes('phone') &&
                     !label.toLowerCase().includes('contact') &&

@@ -1,6 +1,6 @@
 import { client, ApiResponse } from '../api/client';
 import { endpoints } from '../api/endpoints';
-import { setToken, removeToken } from './tokenService';
+import { setToken, removeToken, getRefreshToken } from './tokenService';
 
 export interface LoginPayload {
     username: string; // The backend uses 'username' for email in login
@@ -9,6 +9,7 @@ export interface LoginPayload {
 
 export interface LoginResponseData {
     token: string;
+    refreshToken?: string;
     user?: any;
 }
 
@@ -29,21 +30,32 @@ export const AuthService = {
     login: async (payload: LoginPayload): Promise<string> => {
         const response = await client.post<ApiResponse<LoginResponseData>>(endpoints.auth.login, payload, { skipAuth: true });
         const token = response.data.data.token;
+        const refreshToken = response.data.data.refreshToken;
         if (token) {
-            await setToken(token);
+            await setToken(token, refreshToken);
         }
         return token;
     },
 
     logout: async () => {
-        await removeToken();
+        try {
+            const refreshToken = await getRefreshToken();
+            if (refreshToken) {
+                await client.post(endpoints.auth.logout, { refreshToken }, { skipAuth: true });
+            }
+        } catch (e) {
+            // ignore network errors on logout
+        } finally {
+            await removeToken();
+        }
     },
 
     register: async (payload: SignupPayload): Promise<string | undefined> => {
         const response = await client.post<ApiResponse<LoginResponseData>>(endpoints.auth.signup, payload, { skipAuth: true });
         const token = response.data.data?.token;
+        const refreshToken = response.data.data?.refreshToken;
         if (token) {
-            await setToken(token);
+            await setToken(token, refreshToken);
         }
         return token;
     },
@@ -51,10 +63,21 @@ export const AuthService = {
     verify: async (payload: VerifyPayload): Promise<string> => {
         const response = await client.post<ApiResponse<LoginResponseData>>(endpoints.auth.verify, payload, { skipAuth: true });
         const token = response.data.data.token;
+        const refreshToken = response.data.data.refreshToken;
         if (token) {
-            await setToken(token);
+            await setToken(token, refreshToken);
         }
         return token;
+    },
+
+    refreshTokens: async (refreshToken: string): Promise<string> => {
+        const response = await client.post<ApiResponse<LoginResponseData>>(endpoints.auth.refresh, { refreshToken }, { skipAuth: true });
+        const newToken = response.data.data.token;
+        const newRefreshToken = response.data.data.refreshToken;
+        if (newToken) {
+            await setToken(newToken, newRefreshToken);
+        }
+        return newToken;
     },
 
     resendOtp: async (email: string): Promise<void> => {
@@ -79,6 +102,11 @@ export const AuthService = {
     },
 
     updateEmail: async (newEmail: string, otp: string, password: string): Promise<void> => {
-        await client.post(endpoints.doctor.updateEmail, { newEmail, otp, password });
+        const response = await client.post<ApiResponse<LoginResponseData>>(endpoints.doctor.updateEmail, { newEmail, otp, password });
+        const token = response.data.data?.token;
+        const refreshToken = response.data.data?.refreshToken;
+        if (token) {
+            await setToken(token, refreshToken);
+        }
     }
 };

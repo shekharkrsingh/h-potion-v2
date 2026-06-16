@@ -144,6 +144,8 @@ export const createProfileComponentStyles = (theme: ColorTheme) => StyleSheet.cr
         borderRadius: 12,
         borderWidth: 1,
         borderColor: theme.border.subtle,
+        flexDirection: 'row',
+        alignItems: 'center',
     },
 
     // ThemeSelector Styles
@@ -196,5 +198,25 @@ export const createProfileComponentStyles = (theme: ColorTheme) => StyleSheet.cr
     detailValue: {
         flexWrap: 'wrap',
         lineHeight: 20,
+    },
+    availabilityRow: {
+        flexDirection: 'row',
+        alignItems: 'flex-start',
+        paddingVertical: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.border.subtle,
+    },
+    availabilityRowLast: {
+        borderBottomWidth: 0,
+        paddingBottom: 0,
+    },
+    dayCol: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        width: 85,
+        paddingTop: 6,
+    },
+    slotsCol: {
+        flex: 1,
     },
 });

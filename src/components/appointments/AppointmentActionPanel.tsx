@@ -105,7 +105,8 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
 
             onPress: () => handleAction(canEdit, onEdit, 'Edit Appointment'),
             isActive: false,
-            isDestructive: false
+            isDestructive: false,
+            isDisabled: appointment.treated || appointment.status === 'CANCELLED' || appointment.status === 'MISSED'
         },
         // ARRIVED
         {
@@ -211,7 +212,8 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
 
             onPress: () => handleAction(canCancel, onCancel, 'Cancel Appointment', 'destructive'),
             isActive: false,
-            isDestructive: true
+            isDestructive: true,
+            isDisabled: appointment.treated
         },
     ], [appointment, theme, isDark, onEdit, onToggleAvailability, onTogglePayment, onToggleTreated, onToggleEmergency, onCancel, onReactivate]);
 
@@ -226,6 +228,7 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
                 {actions.map((action) => {
                     const Icon = action.icon;
                     const isActive = action.isActive;
+                    const isDisabled = (action as any).isDisabled;
 
                     // --- Aesthetic Logic ---
                     // Default State (Inactive): White/Dark Card + Neutral Border
@@ -263,10 +266,12 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
                                 {
                                     backgroundColor: bgColor,
                                     borderColor: borderColor,
+                                    opacity: isDisabled ? 0.4 : 1,
                                 }
                             ]}
                             onPress={action.onPress}
                             activeOpacity={0.7}
+                            disabled={isDisabled}
                         >
                             <View style={styles.contentContainer}>
                                 <View style={[
