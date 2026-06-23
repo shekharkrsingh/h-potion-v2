@@ -1,6 +1,6 @@
 import { client, ApiResponse } from '../api/client';
 import { endpoints } from '../api/endpoints';
-import { setToken, removeToken, getRefreshToken } from './tokenService';
+import { setToken, removeToken, getRefreshToken, getUserFromToken, getValidToken } from './tokenService';
 
 export interface LoginPayload {
     username: string; // The backend uses 'username' for email in login
@@ -89,11 +89,9 @@ export const AuthService = {
     },
 
     getUserFromToken: async () => {
-        const { getUserFromToken } = require('./tokenService');
         return await getUserFromToken();
     },
     getValidToken: async () => {
-        const { getValidToken } = require('./tokenService');
         return await getValidToken();
     },
 

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { AuthService, LoginPayload, SignupPayload, VerifyPayload } from '@/services/auth/authService';
+import { getRefreshToken } from '@/services/auth/tokenService';
 import { User } from '@/types/auth';
 
 interface AuthState {
@@ -92,8 +93,13 @@ export const sendOtp = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
     'auth/logout',
     async (_, { dispatch }) => {
-        await AuthService.logout();
+        // Always clear local state first — guaranteed even if network call fails
         dispatch(clearCredentials());
+        try {
+            await AuthService.logout();
+        } catch (e) {
+            // Network failure during logout is acceptable — local state already cleared
+        }
     }
 );
 
@@ -109,7 +115,6 @@ export const restoreSession = createAsyncThunk(
             }
 
             // Access token expired or missing — try to refresh using the refresh token
-            const { getRefreshToken } = require('@/services/auth/tokenService');
             const refreshToken = await getRefreshToken();
             if (refreshToken) {
                 try {
