@@ -27,6 +27,7 @@ import { Appointment } from '@/store/slices/appointmentSlice';
 import { spacing } from '@/theme/spacing';
 import { radius } from '@/theme/radius';
 import { haptics } from '@/utils/haptics';
+import { parseTimeToMinutes } from '@/utils/timeUtils';
 import { FadeInView } from '@/components/ui/FadeInView';
 import { EditConfirmationModal } from './EditConfirmationModal';
 import { BaseEditModal } from '../profile/edit/modals/BaseEditModal';
@@ -97,6 +98,11 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
     const [showAvailabilityInfo, setShowAvailabilityInfo] = useState(false);
 
     const profile = useSelector((state: RootState) => state.profile.data);
+    const profileRole = useSelector((state: RootState) => state.profile.role);
+    const { activeDoctorProfile } = useSelector((state: RootState) => state.activeDoctor);
+
+    const isCollaborator = profileRole === 'COLLABORATOR';
+    const doctorData = isCollaborator ? activeDoctorProfile : profile;
 
     useEffect(() => {
         if (visible && appointment) {
@@ -130,18 +136,6 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
     const contactIcon = useMemo(() => isContactValid ? <VerificationBadge /> : undefined, [isContactValid]);
     const emailIcon = useMemo(() => isEmailValid ? <VerificationBadge /> : undefined, [isEmailValid]);
 
-    const parseTimeToMinutes = (timeStr: string): number => {
-        const cleanStr = timeStr.trim().toLowerCase();
-        const isPm = cleanStr.includes('pm');
-        const temp = cleanStr.replace(/[^0-9:]/g, '');
-        const [hStr, mStr] = temp.split(':');
-        let hour = parseInt(hStr, 10);
-        const minute = parseInt(mStr || '0', 10);
-        if (hour === 12) hour = 0;
-        if (isPm) hour += 12;
-        return hour * 60 + minute;
-    };
-
     const validate = () => {
         const newErrors: Record<string, string> = {};
         if (!isFirstNameValid) newErrors.firstName = 'First name is required';
@@ -149,11 +143,11 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
         if (!isEmailValid) newErrors.email = 'Please enter a valid email address';
 
         // Availability validation
-        if (profile?.availability && profile.availability.length > 0) {
+        if (doctorData?.availability && doctorData.availability.length > 0) {
             const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
             const selectedDayName = DAYS_MAP[formData.appointmentDateTime.getDay()];
             
-            const dayData = profile.availability.find((a: any) => a.day === selectedDayName);
+            const dayData = doctorData.availability.find((a: any) => a.day === selectedDayName);
             
             if (!dayData) {
                 const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
@@ -223,10 +217,10 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
 
             // Real-time validation
             const newErrors = { ...errors };
-            if (profile?.availability && profile.availability.length > 0) {
+            if (doctorData?.availability && doctorData.availability.length > 0) {
                 const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
                 const selectedDayName = DAYS_MAP[newDate.getDay()];
-                const dayData = profile.availability.find((a: any) => a.day === selectedDayName);
+                const dayData = doctorData.availability.find((a: any) => a.day === selectedDayName);
 
                 if (!dayData) {
                     const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
@@ -479,9 +473,9 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                                         <Text variant="caption" weight="bold" color={theme.text.tertiary} style={{ textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
                                             Availability
                                         </Text>
-                                        {profile?.availability && profile.availability.length > 0 ? (
+                                        {doctorData?.availability && doctorData.availability.length > 0 ? (
                                             <View style={{ gap: 10 }}>
-                                                {profile.availability.map((a: any) => (
+                                                {doctorData.availability.map((a: any) => (
                                                     <View key={a.day} style={{ flexDirection: 'row', alignItems: 'flex-start' }}>
                                                         <View style={{ width: 80, paddingTop: 2 }}>
                                                             <Text variant="caption" weight="semibold" color={theme.palette.primary[500]}>

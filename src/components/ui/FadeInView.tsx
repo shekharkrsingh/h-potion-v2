@@ -8,12 +8,13 @@ interface FadeInViewProps {
     style?: StyleProp<ViewStyle>;
     useScale?: boolean; // New prop for "pop" effect
     translateYOffset?: number; // Starting Y offset
+    translateXOffset?: number; // Starting X offset
     trigger?: any; // Change this to trigger re-animation
 }
 
 /**
  * A reusable component that fades in its children when mounted.
- * Now supports a "pop" scale effect for a more premium entrance.
+ * Now supports a "pop" scale effect and horizontal/vertical translations.
  */
 export const FadeInView: React.FC<FadeInViewProps> = ({
     children,
@@ -22,6 +23,7 @@ export const FadeInView: React.FC<FadeInViewProps> = ({
     style,
     useScale = true,
     translateYOffset = 15,
+    translateXOffset = 0,
     trigger,
 }) => {
     const animValue = useRef(new Animated.Value(0)).current;
@@ -41,6 +43,11 @@ export const FadeInView: React.FC<FadeInViewProps> = ({
         outputRange: [translateYOffset, 0],
     });
 
+    const translateX = animValue.interpolate({
+        inputRange: [0, 1],
+        outputRange: [translateXOffset, 0],
+    });
+
     const scale = animValue.interpolate({
         inputRange: [0, 1],
         outputRange: [useScale ? 0.95 : 1, 1],
@@ -51,7 +58,11 @@ export const FadeInView: React.FC<FadeInViewProps> = ({
             style={[
                 {
                     opacity: animValue,
-                    transform: [{ translateY }, { scale }],
+                    transform: [
+                        { translateY },
+                        { translateX },
+                        { scale }
+                    ],
                 },
                 style,
             ]}

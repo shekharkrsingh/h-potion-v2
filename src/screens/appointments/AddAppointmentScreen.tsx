@@ -47,7 +47,9 @@ import { radius } from '@/theme/radius';
 import { AppDispatch, RootState } from '@/store';
 import { bookAppointment } from '@/store/slices/bookingSlice';
 import { fetchProfile } from '@/store/slices/profileSlice';
+import { fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
 import { haptics } from '@/utils/haptics';
+import { parseTimeToMinutes } from '@/utils/timeUtils';
 
 // Sub-components
 import { AddAppointmentCard } from '@/components/add-appointment/AddAppointmentCard';
@@ -243,6 +245,10 @@ const AddAppointmentScreen = () => {
     const styles = createStyles(theme, isDark);
     const dispatch = useDispatch<AppDispatch>();
     const { data: profile } = useSelector((state: RootState) => state.profile);
+    const { activeDoctorProfile } = useSelector((state: RootState) => state.activeDoctor);
+    const profileRole = useSelector((state: RootState) => state.profile.role);
+    const isCollaborator = profileRole === 'COLLABORATOR';
+    const doctorData = isCollaborator ? activeDoctorProfile : profile;
 
     // Input Refs for Navigation
     const lastRef = useRef<TextInput>(null);
@@ -330,7 +336,10 @@ const AddAppointmentScreen = () => {
         useCallback(() => {
             scrollViewRef.current?.scrollToPosition(0, 0, false);
             dispatch(fetchProfile());
-        }, [dispatch])
+            if (isCollaborator) {
+                dispatch(fetchActiveDoctorProfile());
+            }
+        }, [dispatch, isCollaborator])
     );
 
     const handleReasonSelect = useCallback((reason: string) => {
@@ -374,8 +383,8 @@ const AddAppointmentScreen = () => {
                 const selectedDayName = DAYS_MAP[newDate.getDay()];
                 const newErrors = { ...errors };
 
-                if (profile?.availability && profile.availability.length > 0) {
-                    const dayData = profile.availability.find(a => a.day === selectedDayName);
+                if (doctorData?.availability && doctorData.availability.length > 0) {
+                    const dayData = doctorData.availability.find(a => a.day === selectedDayName);
                     if (!dayData) {
                         const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
                         newErrors.appointmentDateTime = `You are not available on ${prettyDay}s. Please select an available day.`;
@@ -385,17 +394,6 @@ const AddAppointmentScreen = () => {
 
                         if (dayData.slots && dayData.slots.length > 0) {
                             const apptMinutes = newDate.getHours() * 60 + newDate.getMinutes();
-                            const parseTimeToMinutes = (timeStr: string): number => {
-                                const cleanStr = timeStr.trim().toLowerCase();
-                                const isPm = cleanStr.includes('pm');
-                                const temp = cleanStr.replace(/[^0-9:]/g, '');
-                                const [hStr, mStr] = temp.split(':');
-                                let hour = parseInt(hStr, 10);
-                                const minute = parseInt(mStr, 10);
-                                if (hour === 12) hour = 0;
-                                if (isPm) hour += 12;
-                                return hour * 60 + minute;
-                            };
 
                             const isWithinSlot = dayData.slots.some((slot: any) => {
                                 try {
@@ -422,7 +420,7 @@ const AddAppointmentScreen = () => {
                 return { ...prev, appointmentDateTime: newDate };
             });
         }
-    }, [profile, errors]);
+    }, [doctorData, errors]);
 
     const handleTimeChange = useCallback((event: any, selectedDate?: Date) => {
         if (Platform.OS === 'android') setShowTimePicker(false);
@@ -442,8 +440,8 @@ const AddAppointmentScreen = () => {
                 const selectedDayName = DAYS_MAP[newDate.getDay()];
                 const newErrors = { ...errors };
 
-                if (profile?.availability && profile.availability.length > 0) {
-                    const dayData = profile.availability.find(a => a.day === selectedDayName);
+                if (doctorData?.availability && doctorData.availability.length > 0) {
+                    const dayData = doctorData.availability.find(a => a.day === selectedDayName);
                     if (!dayData) {
                         const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
                         newErrors.appointmentDateTime = `You are not available on ${prettyDay}s. Please select an available day.`;
@@ -453,17 +451,6 @@ const AddAppointmentScreen = () => {
 
                         if (dayData.slots && dayData.slots.length > 0) {
                             const apptMinutes = newDate.getHours() * 60 + newDate.getMinutes();
-                            const parseTimeToMinutes = (timeStr: string): number => {
-                                const cleanStr = timeStr.trim().toLowerCase();
-                                const isPm = cleanStr.includes('pm');
-                                const temp = cleanStr.replace(/[^0-9:]/g, '');
-                                const [hStr, mStr] = temp.split(':');
-                                let hour = parseInt(hStr, 10);
-                                const minute = parseInt(mStr, 10);
-                                if (hour === 12) hour = 0;
-                                if (isPm) hour += 12;
-                                return hour * 60 + minute;
-                            };
 
                             const isWithinSlot = dayData.slots.some((slot: any) => {
                                 try {
@@ -490,7 +477,7 @@ const AddAppointmentScreen = () => {
                 return { ...prev, appointmentDateTime: newDate };
             });
         }
-    }, [profile, errors]);
+    }, [doctorData, errors]);
 
     const handleQuickTime = useCallback((hours: number, minutes: number = 0) => {
         haptics.selection();
@@ -527,7 +514,7 @@ const AddAppointmentScreen = () => {
         }
 
         // Validate availability
-        if (!profile?.availability || profile.availability.length === 0) {
+        if (!doctorData?.availability || doctorData.availability.length === 0) {
             showToast('Please configure your availability in your profile first.', 'error');
             return false;
         }
@@ -535,7 +522,7 @@ const AddAppointmentScreen = () => {
         const DAYS_MAP = ['SUNDAY', 'MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY'];
         const selectedDayName = DAYS_MAP[form.appointmentDateTime.getDay()];
 
-        const dayData = profile.availability.find(a => a.day === selectedDayName);
+        const dayData = doctorData.availability.find(a => a.day === selectedDayName);
 
         if (!dayData) {
             const prettyDay = selectedDayName.charAt(0) + selectedDayName.slice(1).toLowerCase();
@@ -543,22 +530,6 @@ const AddAppointmentScreen = () => {
         } else if (!dayData.slots || dayData.slots.length === 0) {
             newErrors.appointmentTime = `You have no time slots configured for ${selectedDayName}.`;
         } else {
-            const parseTimeToMinutes = (timeStr: string): number => {
-                const cleanStr = timeStr.trim().toLowerCase();
-                const isPm = cleanStr.includes('pm');
-                const temp = cleanStr.replace(/[^0-9:]/g, '');
-                const [hStr, mStr] = temp.split(':');
-                let hour = parseInt(hStr, 10);
-                const minute = parseInt(mStr, 10);
-                if (hour === 12) {
-                    hour = 0;
-                }
-                if (isPm) {
-                    hour += 12;
-                }
-                return hour * 60 + minute;
-            };
-
             const apptMinutes = form.appointmentDateTime.getHours() * 60 + form.appointmentDateTime.getMinutes();
             let isWithinSlot = false;
 
@@ -688,8 +659,25 @@ const AddAppointmentScreen = () => {
                             )}
                         </View>
 
+                        {/* Active Doctor Banner */}
+                        {isCollaborator && doctorData && (
+                            <View style={styles.doctorBanner}>
+                                <View style={styles.doctorIconContainer}>
+                                    <Zap size={20} color={theme.palette.primary[500]} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text variant="bodyMedium" weight="bold" color={theme.text.primary}>
+                                        Booking for {doctorData.firstName ? `Dr. ${doctorData.firstName} ${doctorData.lastName}` : 'Active Doctor'}
+                                    </Text>
+                                    <Text variant="bodySmall" color={theme.text.secondary} style={{ marginTop: 2 }}>
+                                        All appointments booked will be assigned to this doctor.
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
+
                         {/* Verification Warning Banner */}
-                        {profile?.verificationStatus !== 'VERIFIED' && (
+                        {doctorData?.verificationStatus !== 'VERIFIED' && (
                             <FadeInView delay={0} duration={300} style={styles.warningBanner}>
                                 <View style={styles.warningIconContainer}>
                                     <AlertCircle size={20} color="#ef4444" />
@@ -699,15 +687,15 @@ const AddAppointmentScreen = () => {
                                         Booking Restricted
                                     </Text>
                                     <Text variant="bodySmall" color={theme.text.secondary} style={{ marginTop: 2 }}>
-                                        {profile?.verificationStatus === 'SUSPENDED'
-                                            ? 'Your practice account is suspended due to license expiry or administrative actions.'
-                                            : profile?.verificationStatus === 'TERMINATED'
-                                            ? 'Your practice account has been terminated.'
-                                            : profile?.verificationStatus === 'DENIED'
-                                            ? 'Your verification request was denied.'
-                                            : profile?.verificationStatus === 'REJECTED'
-                                            ? 'Your verification request was rejected.'
-                                            : 'Your practice account is pending verification. You can book appointments once verified.'}
+                                        {doctorData?.verificationStatus === 'SUSPENDED'
+                                            ? (isCollaborator ? "This doctor's practice account is suspended due to license expiry or administrative actions." : 'Your practice account is suspended due to license expiry or administrative actions.')
+                                            : doctorData?.verificationStatus === 'TERMINATED'
+                                            ? (isCollaborator ? "This doctor's practice account has been terminated." : 'Your practice account has been terminated.')
+                                            : doctorData?.verificationStatus === 'DENIED'
+                                            ? (isCollaborator ? "This doctor's verification request was denied." : 'Your verification request was denied.')
+                                            : doctorData?.verificationStatus === 'REJECTED'
+                                            ? (isCollaborator ? "This doctor's verification request was rejected." : 'Your verification request was rejected.')
+                                            : (isCollaborator ? "This doctor's practice account is pending verification. You can book appointments once verified." : 'Your practice account is pending verification. You can book appointments once verified.')}
                                     </Text>
                                 </View>
                             </FadeInView>
@@ -1040,16 +1028,16 @@ const AddAppointmentScreen = () => {
                         <TouchableOpacity
                             onPress={handleSubmit}
                             activeOpacity={0.9}
-                            disabled={isSubmitting || profile?.verificationStatus !== 'VERIFIED'}
+                            disabled={isSubmitting || doctorData?.verificationStatus !== 'VERIFIED'}
                             style={[
                                 styles.fabButton,
                                 shadows.l,
-                                profile?.verificationStatus !== 'VERIFIED' && { opacity: 0.6 }
+                                doctorData?.verificationStatus !== 'VERIFIED' && { opacity: 0.6 }
                             ]}
                         >
                             <LinearGradient
                                 colors={
-                                    profile?.verificationStatus !== 'VERIFIED'
+                                    doctorData?.verificationStatus !== 'VERIFIED'
                                         ? ['#6b7280', '#4b5563']
                                         : form.isEmergency
                                         ? ['#ef4444', '#b91c1c']
@@ -1064,7 +1052,7 @@ const AddAppointmentScreen = () => {
                                 ) : (
                                     <>
                                         <Text variant="bodyLarge" color="#FFF" weight="bold" style={{ marginRight: 8 }}>
-                                            {profile?.verificationStatus !== 'VERIFIED'
+                                            {doctorData?.verificationStatus !== 'VERIFIED'
                                                 ? 'Verification Required'
                                                 : form.isEmergency
                                                 ? 'Confirm Emergency Service'
@@ -1153,8 +1141,8 @@ const AddAppointmentScreen = () => {
                                                 <Info size={18} color="#fff" strokeWidth={2.5} />
                                             </View>
                                             <View>
-                                                <Text variant="h4" color="#fff" weight="bold">My Availability</Text>
-                                                <Text variant="caption" color="rgba(255,255,255,0.75)">Patients can book only in these windows</Text>
+                                                <Text variant="h4" color="#fff" weight="bold">{isCollaborator ? "Doctor's Availability" : "My Availability"}</Text>
+                                                <Text variant="caption" color="rgba(255,255,255,0.75)">{isCollaborator ? "Patients can book only in doctor's available windows" : "Patients can book only in these windows"}</Text>
                                             </View>
                                         </View>
                                         <TouchableOpacity
@@ -1176,7 +1164,7 @@ const AddAppointmentScreen = () => {
                                         </View>
                                         <View style={{ gap: 12 }}>
                                             {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((dayName) => {
-                                                const a = profile?.availability?.find((item: any) => item.day === dayName);
+                                                const a = doctorData?.availability?.find((item: any) => item.day === dayName);
                                                 const hasSlots = a && a.slots && a.slots.length > 0;
                                                 return (
                                                     <View key={dayName} style={[{ flexDirection: 'row', alignItems: 'flex-start', gap: 8 }, !hasSlots && { opacity: 0.7 }]}>
@@ -1206,7 +1194,9 @@ const AddAppointmentScreen = () => {
                                     <View style={{ marginTop: spacing.l, padding: spacing.m, backgroundColor: isDark ? 'rgba(14,165,233,0.08)' : 'rgba(14,165,233,0.06)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(14,165,233,0.18)', flexDirection: 'row', gap: 8 }}>
                                         <AlertCircle size={14} color={theme.palette.primary[500]} style={{ marginTop: 1 }} />
                                         <Text variant="caption" color={theme.text.secondary} style={{ flex: 1, lineHeight: 18 }}>
-                                            Appointments outside these windows will be rejected. Update your availability in Profile settings.
+                                            {isCollaborator 
+                                                ? "Appointments outside these windows will be rejected. The doctor's availability must be configured in their profile settings."
+                                                : "Appointments outside these windows will be rejected. Update your availability in Profile settings."}
                                         </Text>
                                     </View>
                                 </View>

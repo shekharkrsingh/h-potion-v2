@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { View, TouchableOpacity, Animated, Easing, Alert, Modal, ImageBackground } from 'react-native';
+import { View, TouchableOpacity, Animated, Easing, Alert, ImageBackground } from 'react-native';
 import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -8,7 +8,7 @@ import { useAppDispatch } from '@/store/hooks';
 import {
     ChevronLeft, Lock, Mail, Bell, Shield, Headphones,
     LogOut, UserX, Trash2, Calendar, Users, Activity, AlertOctagon,
-    ArrowRight, FileStack, Contact
+    ArrowRight, FileStack, Contact, Building
 } from 'lucide-react-native';
 
 import { useTheme } from '@/theme/ThemeContext';
@@ -18,6 +18,7 @@ import { useToast } from '@/context/ToastContext';
 import { haptics } from '@/utils/haptics';
 import { logoutUser } from '@/store/slices/authSlice';
 import { toggleHaptics, toggleNotificationsVibration, toggleEmergencyAlerts } from '@/store/slices/userSettingsSlice';
+import { fetchAssociatedDoctors } from '@/store/slices/activeDoctorSlice';
 import { RootState } from '@/store';
 
 // Modular Components
@@ -31,6 +32,7 @@ import { PrivacyModal } from '@/components/settings/modals/PrivacyModal';
 import { SupportModal } from '@/components/settings/modals/SupportModal';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
 import { ThemeSelector } from '@/components/profile/ThemeSelector';
+import { DoctorSwitcher } from '@/components/collaborator/DoctorSwitcher';
 
 // Styles
 import { createSettingsStyles } from '@/styles/screens/SettingsScreen.styles';
@@ -50,6 +52,9 @@ export default function SettingsScreen() {
     const profileRole = useSelector((state: RootState) => state.profile.role);
     const isProfileLoading = useSelector((state: RootState) => state.profile.isLoading);
     const { hapticsEnabled, notificationsVibrationEnabled, emergencyAlertsEnabled } = useSelector((state: RootState) => state.userSettings);
+
+    const activeDoctor = useSelector((state: RootState) => state.activeDoctor.doctors.find(d => d.doctorId === state.activeDoctor.activeDoctorId));
+    const [doctorModalVisible, setDoctorModalVisible] = useState(false);
 
     // Derived Styles & State
     const styles = useMemo(() => createSettingsStyles(theme, insets, isDark), [theme, insets, isDark]);
@@ -76,6 +81,13 @@ export default function SettingsScreen() {
             ]).start();
         }
     }, [isProfileLoading]);
+
+    useEffect(() => {
+        if (isCollaborator) {
+            dispatch(fetchAssociatedDoctors());
+        }
+    }, [dispatch, isCollaborator]);
+
 
     // Header Calculations
     const headerOpacity = scrollY.interpolate({ inputRange: [0, 60], outputRange: [0, 1], extrapolate: 'clamp' });
@@ -160,6 +172,13 @@ export default function SettingsScreen() {
                     <Text style={styles.sectionLabel}>Account Security</Text>
                     <SettingCard index={0} icon={Lock} title="Password" subtitle="Change login credentials" onPress={() => setActiveModal('password')} theme={theme} componentStyles={componentStyles} />
                     <SettingCard index={1} icon={Mail} title="Email Address" subtitle={profile?.email || 'Update your email'} isFilled={!!profile?.email} onPress={() => setActiveModal('email')} theme={theme} componentStyles={componentStyles} />
+
+                    {isCollaborator && (
+                        <>
+                            <Text style={styles.sectionLabel}>Clinic Management</Text>
+                            <SettingCard index={2} icon={Building} title="Switch Active Clinic" subtitle={activeDoctor ? `Managing: ${activeDoctor.doctorName}` : 'Select Doctor/Clinic'} onPress={() => setDoctorModalVisible(true)} theme={theme} componentStyles={componentStyles} />
+                        </>
+                    )}
 
                     {!isCollaborator && (
                         <>
@@ -250,6 +269,13 @@ export default function SettingsScreen() {
                         <ToggleRow icon={Bell} color={theme.palette.secondary[400]} label="Push Notifications" description="Receive instant mobile alerts" value={true} onValueChange={() => { }} theme={theme} />
                     </View>
                 </BaseEditModal>
+
+                {/* Reusable Doctor Switcher - modal-only mode (trigger is the SettingCard above) */}
+                <DoctorSwitcher
+                    showTrigger={false}
+                    externalVisible={doctorModalVisible}
+                    onExternalClose={() => setDoctorModalVisible(false)}
+                />
             </ImageBackground>
         </View>
     );

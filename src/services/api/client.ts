@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse, AxiosError } from 'axios';
-import { getValidToken, getRefreshToken, removeToken, setToken } from '@/services/auth/tokenService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { getValidToken, getRefreshToken, removeToken, setToken, getRoleFromToken } from '@/services/auth/tokenService';
 import { API_BASE_URL, endpoints } from './endpoints';
 
 // Extend AxiosRequestConfig to include skipAuth
@@ -31,6 +32,15 @@ client.interceptors.request.use(
             const token = await getValidToken();
             if (token && config.headers) {
                 config.headers.Authorization = `Bearer ${token}`;
+            }
+        }
+
+        // Add X-Active-Doctor-Id header for collaborators
+        const role = await getRoleFromToken();
+        if (role === 'COLLABORATOR' && config.headers) {
+            const activeDoctorId = await AsyncStorage.getItem('activeDoctorId');
+            if (activeDoctorId) {
+                config.headers['X-Active-Doctor-Id'] = activeDoctorId;
             }
         }
 

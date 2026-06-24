@@ -49,6 +49,9 @@ export const endpoints = {
         remove: (id: string) => `/api/v1/doctors/collaborators/${id}`,
         activate: (id: string) => `/api/v1/doctors/collaborators/${id}/activate`,
         deactivate: (id: string) => `/api/v1/doctors/collaborators/${id}/deactivate`,
+        associatedDoctors: '/api/v1/collaborators/doctors',
+        switchDoctor: (id: string) => `/api/v1/collaborators/active-doctor/${id}`,
+        activeDoctorProfile: '/api/v1/collaborators/active-doctor/profile',
     },
     reports: {
         doctor: (fromDate: string, toDate?: string) => {

@@ -16,6 +16,8 @@ import {
     Outfit_600SemiBold,
     Outfit_700Bold,
 } from '@expo-google-fonts/outfit';
+import { fetchAssociatedDoctors, fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { compareVersions } from '@/utils/version';
 
 export const useAppInitialization = () => {
@@ -58,13 +60,36 @@ export const useAppInitialization = () => {
                     }
                 }
 
-                // 2. Initialize Websocket if session exists
-                // We pass the dispatch and a helper to get the latest profile state (if needed)
+                // 3. Initialize Websocket if session exists
                 websocketAppointment.initialize(
                     store.dispatch,
-                    () => ({}) // Profile state getter (can be implemented if needed)
+                    store.getState
                 );
                 websocketAppointment.initializeAppStateListener();
+
+                // 4. Load collaborator active doctor context
+                if (sessionResult && sessionResult.user && sessionResult.user.role === 'COLLABORATOR') {
+                    try {
+                        const assocResult = await dispatch(fetchAssociatedDoctors()).unwrap();
+                        const activeDoctorId = await AsyncStorage.getItem('activeDoctorId');
+                        
+                        let targetDoctorId = activeDoctorId;
+                        if (!targetDoctorId && assocResult.activeDoctorId) {
+                            targetDoctorId = assocResult.activeDoctorId;
+                            await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
+                        } else if (!targetDoctorId && assocResult.doctors.length > 0) {
+                            targetDoctorId = assocResult.doctors[0].doctorId;
+                            await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
+                        }
+
+                        if (targetDoctorId) {
+                            websocketAppointment.updateDoctorSubscription(targetDoctorId);
+                            await dispatch(fetchActiveDoctorProfile()).unwrap();
+                        }
+                    } catch (err) {
+                        console.error('[AppInit] Failed to load collaborator context:', err);
+                    }
+                }
 
             } catch (error) {
                 console.error('[AppInit] Initialization error:', error);

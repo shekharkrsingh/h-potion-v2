@@ -30,9 +30,12 @@ import {
 } from 'lucide-react-native';
 
 import { useTheme } from '@/theme/ThemeContext';
+import { spacing } from '@/theme/spacing';
+import { radius } from '@/theme/radius';
 import { RootState, AppDispatch } from '@/store';
 import { logoutUser } from '@/store/slices/authSlice';
 import { fetchProfile } from '@/store/slices/profileSlice';
+import { fetchAssociatedDoctors, fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
 import { Text } from '@/components/ui/Text';
 import { FadeInView } from '@/components/ui/FadeInView';
 
@@ -65,21 +68,35 @@ const ProfileScreen = () => {
 
     const { user } = useSelector((state: RootState) => state.auth);
     const { data: profile, isLoading, error, role: profileRole } = useSelector((state: RootState) => state.profile);
+    const { doctors, activeDoctorId, activeDoctorProfile } = useSelector((state: RootState) => state.activeDoctor);
+
+    const isCollaborator = (profileRole || user?.role) === 'COLLABORATOR';
+    const doctorData = isCollaborator ? activeDoctorProfile : profile;
 
     React.useEffect(() => {
         dispatch(fetchProfile());
-    }, [dispatch]);
+        if (isCollaborator) {
+            dispatch(fetchAssociatedDoctors());
+            dispatch(fetchActiveDoctorProfile());
+        }
+    }, [dispatch, isCollaborator]);
 
     const onRefresh = React.useCallback(async () => {
         setRefreshing(true);
         try {
             await dispatch(fetchProfile()).unwrap();
+            if (isCollaborator) {
+                await Promise.all([
+                    dispatch(fetchAssociatedDoctors()).unwrap(),
+                    dispatch(fetchActiveDoctorProfile()).unwrap()
+                ]);
+            }
         } catch (err) {
             console.error('[Profile] Refresh failed:', err);
         } finally {
             setRefreshing(false);
         }
-    }, [dispatch]);
+    }, [dispatch, isCollaborator]);
 
     useFocusEffect(
         React.useCallback(() => {
@@ -148,9 +165,6 @@ const ProfileScreen = () => {
         extrapolate: 'clamp',
     });
 
-
-    const isCollaborator = (profileRole || user?.role) === 'COLLABORATOR';
-
     return (
         <View style={styles.container}>
             <Animated.View
@@ -213,36 +227,32 @@ const ProfileScreen = () => {
                     <View style={styles.sectionsWrapper}>
 
                         {/* About Me Section - Hidden for Collaborators */}
-                        {!isCollaborator && (
+                        {!isCollaborator && profile?.about && (
                             <FadeInView delay={100} translateYOffset={50}>
                                 <ProfileSection title="About Me">
-                                    {profile?.about ? (
-                                        <View>
-                                            <View style={styles.aboutContainer}>
-                                                <View style={styles.aboutIcon}>
-                                                    <FileText size={18} color={theme.palette.primary[500]} />
-                                                </View>
-                                                <Text variant="bodyMedium" color={theme.text.secondary} style={styles.aboutText}>
-                                                    {isAboutExpanded || profile.about.length <= 100
-                                                        ? profile.about
-                                                        : `${profile.about.substring(0, 100)}...`}
-                                                </Text>
+                                    <View>
+                                        <View style={styles.aboutContainer}>
+                                            <View style={styles.aboutIcon}>
+                                                <FileText size={18} color={theme.palette.primary[500]} />
                                             </View>
-                                            {profile.about.length > 100 && (
-                                                <Text
-                                                    variant="caption"
-                                                    color={theme.palette.primary[500]}
-                                                    weight="bold"
-                                                    style={styles.readMoreButton}
-                                                    onPress={() => setIsAboutExpanded(!isAboutExpanded)}
-                                                >
-                                                    {isAboutExpanded ? 'Read Less' : 'Read More'}
-                                                </Text>
-                                            )}
+                                            <Text variant="bodyMedium" color={theme.text.secondary} style={styles.aboutText}>
+                                                {isAboutExpanded || profile.about.length <= 100
+                                                    ? profile.about
+                                                    : `${profile.about.substring(0, 100)}...`}
+                                            </Text>
                                         </View>
-                                    ) : (
-                                        <Text variant="bodyMedium" color={theme.text.tertiary}>No about info available.</Text>
-                                    )}
+                                        {profile.about.length > 100 && (
+                                            <Text
+                                                variant="caption"
+                                                color={theme.palette.primary[500]}
+                                                weight="bold"
+                                                style={styles.readMoreButton}
+                                                onPress={() => setIsAboutExpanded(!isAboutExpanded)}
+                                            >
+                                                {isAboutExpanded ? 'Read Less' : 'Read More'}
+                                            </Text>
+                                        )}
+                                    </View>
                                 </ProfileSection>
                             </FadeInView>
                         )}
@@ -256,7 +266,13 @@ const ProfileScreen = () => {
                                     {isCollaborator ? (
                                         <>
                                             <DetailRow label="Collaborator ID" value={profile?.collaboratorId || user?.id || 'N/A'} theme={theme} styles={componentStyles} icon={Hash} />
-                                            <DetailRow label="Associated Doctor ID" value={profile?.doctorId || 'N/A'} theme={theme} styles={componentStyles} icon={Shield} />
+                                            <DetailRow 
+                                                label="Currently Managing" 
+                                                value={doctors.find(d => d.doctorId === activeDoctorId)?.doctorName || profile?.doctorId || 'N/A'} 
+                                                theme={theme} 
+                                                styles={componentStyles} 
+                                                icon={Shield} 
+                                            />
                                         </>
                                     ) : (
                                         <DetailRow label="Doctor ID" value={profile?.doctorId || 'N/A'} theme={theme} styles={componentStyles} icon={Shield} />
@@ -290,6 +306,59 @@ const ProfileScreen = () => {
                                 </View>
                             </ProfileSection>
                         </FadeInView>
+
+                        {/* Associated Doctors Section */}
+                        {isCollaborator && (
+                            <FadeInView delay={220} translateYOffset={50}>
+                                <ProfileSection title="Associated Doctors">
+                                    <View style={{ gap: 10 }}>
+                                        {doctors.map((doc) => {
+                                            const isSelected = doc.doctorId === activeDoctorId;
+                                            return (
+                                                <View 
+                                                    key={doc.doctorId} 
+                                                    style={{
+                                                        flexDirection: 'row',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        padding: spacing.m,
+                                                        borderRadius: radius.l,
+                                                        borderWidth: 1,
+                                                        borderColor: isSelected ? theme.palette.primary[500] : theme.border.subtle,
+                                                        backgroundColor: isSelected ? (theme.mode === 'dark' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(14, 165, 233, 0.05)') : (theme.mode === 'dark' ? 'rgba(255,255,255,0.02)' : theme.background.neutral),
+                                                        marginBottom: spacing.xs
+                                                    }}
+                                                >
+                                                    <View style={{ flex: 1 }}>
+                                                        <Text variant="bodyMedium" weight="bold" color={theme.text.primary}>
+                                                            {doc.doctorName}
+                                                        </Text>
+                                                        <Text variant="caption" color={theme.text.secondary} style={{ marginTop: 2 }}>
+                                                            {doc.specialization || 'General Practitioner'} • Role: {doc.role || 'Collaborator'}
+                                                        </Text>
+                                                        {doc.clinicName && (
+                                                            <Text variant="caption" color={theme.text.tertiary} style={{ marginTop: 2 }}>
+                                                                {doc.clinicName}
+                                                            </Text>
+                                                        )}
+                                                    </View>
+                                                    {isSelected && (
+                                                        <View style={{
+                                                            backgroundColor: theme.palette.primary[500],
+                                                            paddingHorizontal: 8,
+                                                            paddingVertical: 4,
+                                                            borderRadius: radius.full
+                                                        }}>
+                                                            <Text variant="caption" weight="bold" color="#fff">ACTIVE</Text>
+                                                        </View>
+                                                    )}
+                                                </View>
+                                            );
+                                        })}
+                                    </View>
+                                </ProfileSection>
+                            </FadeInView>
+                        )}
 
                         {/* Professional Details - Hidden for Collaborators */}
                         {!isCollaborator && (
@@ -333,13 +402,13 @@ const ProfileScreen = () => {
                         )}
 
                         {/* Availability Section */}
-                        {!isCollaborator && (
+                        {doctorData && (
                             <FadeInView delay={250} translateYOffset={50}>
                                 <ProfileSection title="Availability">
                                     <View>
                                         <View>
                                             {['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'].map((dayName, index, arr) => {
-                                                const a = profile?.availability?.find((item: any) => item.day === dayName);
+                                                const a = doctorData?.availability?.find((item: any) => item.day === dayName);
                                                 const isLast = index === arr.length - 1;
                                                 const hasSlots = a && a.slots && a.slots.length > 0;
                                                 

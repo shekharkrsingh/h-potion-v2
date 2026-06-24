@@ -304,5 +304,24 @@ export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.c
         backgroundColor: 'rgba(239, 68, 68, 0.15)',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    doctorBanner: {
+        flexDirection: 'row',
+        padding: spacing.m,
+        borderRadius: radius.l,
+        borderWidth: 1,
+        borderColor: 'rgba(14, 165, 233, 0.4)',
+        backgroundColor: isDark ? 'rgba(14, 165, 233, 0.15)' : 'rgba(14, 165, 233, 0.05)',
+        marginBottom: spacing.l,
+        alignItems: 'center',
+        gap: spacing.m,
+    },
+    doctorIconContainer: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: 'rgba(14, 165, 233, 0.15)',
+        justifyContent: 'center',
+        alignItems: 'center',
     }
 });

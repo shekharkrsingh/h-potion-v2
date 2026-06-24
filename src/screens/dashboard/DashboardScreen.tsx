@@ -4,6 +4,8 @@ import { useFocusEffect } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTheme } from '@/theme/ThemeContext';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
+import { DoctorSwitcher } from '@/components/collaborator/DoctorSwitcher';
+import { spacing } from '@/theme/spacing';
 import { StatsOverview } from '@/components/dashboard/StatsOverview';
 import { PerformanceMetrics } from '@/components/dashboard/PerformanceMetrics';
 import { ChartsSection } from '@/components/dashboard/ChartsSection';
@@ -17,6 +19,7 @@ import { fetchStatistics } from '@/store/slices/statisticsSlice';
 import { fetchAppointments, Appointment as ReduxAppointment } from '@/store/slices/appointmentSlice';
 import { fetchProfile } from '@/store/slices/profileSlice';
 import { fetchNotifications } from '@/store/slices/notificationSlice';
+import { fetchAssociatedDoctors, fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
 
 import { createStyles } from '@/styles/screens/DashboardScreen.styles';
 import { getFullImageUrl } from '@/utils/formatters';
@@ -35,21 +38,42 @@ export default function DashboardScreen() {
     const { data: profile, role: profileRole } = useSelector((state: RootState) => state.profile);
     const { user } = useSelector((state: RootState) => state.auth);
     const { items: notifications, unreadCount } = useSelector((state: RootState) => state.notifications);
+    const { activeDoctorId } = useSelector((state: RootState) => state.activeDoctor);
 
     const isCollaborator = (profileRole || user?.role) === 'COLLABORATOR';
 
+    useEffect(() => {
+        if (isCollaborator) {
+            setRefreshKey(Date.now());
+        }
+    }, [activeDoctorId, isCollaborator]);
+
     const loadData = useCallback(async (isManualRefresh = false) => {
         const today = new Date().toISOString().split('T')[0];
-        await Promise.all([
+        
+        // 1. Fetch profile first to verify role context
+        const profileResult = await dispatch(fetchProfile()).unwrap().catch(() => null);
+        const userRole = profileResult?.role || user?.role;
+        const currentIsCollaborator = userRole === 'COLLABORATOR';
+
+        const promises: Promise<any>[] = [
             dispatch(fetchStatistics()),
             dispatch(fetchAppointments(today)),
-            dispatch(fetchProfile()),
             dispatch(fetchNotifications())
-        ]);
+        ];
+
+        // 2. Load collaborator context if applicable
+        if (currentIsCollaborator) {
+            promises.push(dispatch(fetchAssociatedDoctors()).unwrap().catch(() => null));
+            promises.push(dispatch(fetchActiveDoctorProfile()).unwrap().catch(() => null));
+        }
+
+        await Promise.all(promises);
+
         if (isManualRefresh) {
             setRefreshKey(Date.now());
         }
-    }, [dispatch]);
+    }, [dispatch, user?.role]);
 
     useEffect(() => {
         loadData(false);
@@ -101,6 +125,14 @@ export default function DashboardScreen() {
                             workloadSummary={appointments.length > 0 ? `You have ${appointments.length} appointments today` : 'No appointments today'}
                             isCollaborator={isCollaborator}
                         />
+
+                        {isCollaborator && (
+                            <FadeInView key={refreshKey} delay={0} translateXOffset={-50} translateYOffset={0}>
+                                <View style={{ paddingHorizontal: spacing.l, marginBottom: spacing.m }}>
+                                    <DoctorSwitcher />
+                                </View>
+                            </FadeInView>
+                        )}
 
                         {statsError && (
                             <View style={styles.errorContainer}>

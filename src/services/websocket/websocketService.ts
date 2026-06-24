@@ -3,7 +3,7 @@ import SockJS from "sockjs-client";
 import { router } from "expo-router";
 import { AppState, AppStateStatus } from "react-native";
 import { haptics } from "@/utils/haptics";
-import { AppDispatch, store, RootState } from "@/store";
+import type { AppDispatch, RootState } from "@/store";
 import { updateAppointmentLocal, addAppointmentLocal, Appointment } from "@/store/slices/appointmentSlice";
 import { addNotification, Notification } from "@/store/slices/notificationSlice";
 import { webSocketEndpoints } from "./websocketEndpoints";
@@ -32,7 +32,7 @@ class WebsocketService {
     private appStateSubscription: ReturnType<typeof AppState.addEventListener> | null = null;
     private connectionPromise: Promise<void> | null = null;
     private dispatch: AppDispatch | null = null;
-    private getProfileState: (() => { doctorId?: string }) | null = null;
+    private getState: (() => RootState) | null = null;
     private userId: string | null = null;
     private doctorId: string | null = null;
 
@@ -51,19 +51,19 @@ class WebsocketService {
         };
     }
 
-    public initialize(dispatch: AppDispatch, getProfileState: () => { doctorId?: string }): void {
+    public initialize(dispatch: AppDispatch, getState: () => RootState): void {
         this.dispatch = dispatch;
-        this.getProfileState = getProfileState;
+        this.getState = getState;
     }
 
     public async connect(): Promise<void> {
-        if (!this.dispatch || !this.getProfileState) {
+        if (!this.dispatch || !this.getState) {
             console.warn("WebSocket: Attempted to connect before initialization. Call initialize() first.");
             return;
         }
 
         // Check if authenticated before connecting
-        const state = store.getState() as RootState;
+        const state = this.getState() as RootState;
         if (!state.auth.isAuthenticated) {
             // Silently return to avoid spamming logs on auth screens
             return;
@@ -98,7 +98,9 @@ class WebsocketService {
 
             // Extract and store userId and doctorId for notification subscription
             this.userId = getUserId(token);
-            this.doctorId = getDoctorId(token);
+            if (!this.doctorId) {
+                this.doctorId = getDoctorId(token);
+            }
 
             if (!this.userId || !this.doctorId) {
                 console.error("WebSocket: Cannot extract userId or doctorId from token");
@@ -325,8 +327,8 @@ class WebsocketService {
                 const appointment = updatedAppointment as Appointment;
                 
                 // Check if appointment exists in store
-                const state = store.getState() as RootState;
-                const exists = state.appointments.appointments.some(a => a.appointmentId === appointment.appointmentId);
+                const state = this.getState?.() as RootState;
+                const exists = state?.appointments?.appointments?.some(a => a.appointmentId === appointment.appointmentId) ?? false;
                 
                 if (exists) {
                     this.dispatch(updateAppointmentLocal(appointment));
@@ -335,7 +337,7 @@ class WebsocketService {
                 }
 
                 // Trigger vibration strictly based on Emergency Override setting
-                const { emergencyAlertsEnabled } = store.getState().userSettings;
+                const { emergencyAlertsEnabled } = this.getState?.()?.userSettings || {};
                 if (emergencyAlertsEnabled) {
                     haptics.impact(true); // Force impact for appointment critical updates
                 }
@@ -364,11 +366,11 @@ class WebsocketService {
             }
 
             // Check if notification already exists in store to prevent duplicate vibration
-            const currentState = store.getState();
-            const exists = currentState.notifications.items.some(n => n.id === notification.id);
+            const currentState = this.getState?.();
+            const exists = currentState?.notifications?.items?.some(n => n.id === notification.id) ?? false;
 
             if (!exists && !notification.isRead) {
-                const { notificationsVibrationEnabled } = store.getState().userSettings;
+                const { notificationsVibrationEnabled } = this.getState?.()?.userSettings || {};
 
                 // Trigger vibration strictly based on Notification Vibration setting
                 if (notificationsVibrationEnabled) {
@@ -486,6 +488,13 @@ class WebsocketService {
             this.appStateSubscription.remove();
             this.appStateSubscription = null;
             this.appStateListener = null;
+        }
+    }
+
+    public updateDoctorSubscription(newDoctorId: string): void {
+        this.doctorId = newDoctorId;
+        if (this.isConnected && this.stompClient) {
+            this.subscribeToDoctorChannel(newDoctorId);
         }
     }
 }

@@ -10,6 +10,7 @@ import userSettingsReducer from './slices/userSettingsSlice';
 import configReducer from './slices/configSlice';
 import appointmentSearchReducer from './slices/appointmentSearchSlice';
 import appointmentDetailsReducer from './slices/appointmentDetailsSlice';
+import activeDoctorReducer from './slices/activeDoctorSlice';
 
 import { combineReducers } from '@reduxjs/toolkit';
 
@@ -25,6 +26,7 @@ const appReducer = combineReducers({
     config: configReducer,
     appointmentSearch: appointmentSearchReducer,
     appointmentDetails: appointmentDetailsReducer,
+    activeDoctor: activeDoctorReducer,
 });
 
 const rootReducer = (state: any, action: any) => {
