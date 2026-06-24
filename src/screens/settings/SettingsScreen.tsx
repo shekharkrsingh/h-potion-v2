@@ -247,7 +247,7 @@ export default function SettingsScreen() {
                     </Animated.View>
 
                     <View style={styles.footer}>
-                        <Text style={styles.versionText}>H-Potion for Doctors • Version {Constants.expoConfig?.version || '0.0.6'}</Text>
+                        <Text style={styles.versionText}>H-Potion for Doctors • Version {Constants.expoConfig?.version}</Text>
                         <View style={styles.legalLinks}>
                             <TouchableOpacity onPress={() => router.push('/legal/terms')}><Text style={styles.legalLink}>Terms</Text></TouchableOpacity>
                             <TouchableOpacity onPress={() => router.push('/legal/privacy')}><Text style={styles.legalLink}>Privacy</Text></TouchableOpacity>
