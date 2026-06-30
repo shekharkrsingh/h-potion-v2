@@ -44,6 +44,17 @@ client.interceptors.request.use(
             }
         }
 
+        if (role && ['ENTITY_ADMIN', 'ENTITY_SUPERVISOR', 'ENTITY_COLLABORATOR'].includes(role) && config.headers) {
+            const activeEntityId = await AsyncStorage.getItem('activeEntityId');
+            const activeAffiliationId = await AsyncStorage.getItem('activeAffiliationId');
+            if (activeEntityId) {
+                config.headers['X-Active-Entity-Id'] = activeEntityId;
+            }
+            if (activeAffiliationId) {
+                config.headers['X-Active-Affiliation-Id'] = activeAffiliationId;
+            }
+        }
+
         // Best Practice: Let browser/engine handle multipart/form-data boundary
         if (config.data instanceof FormData && config.headers) {
             delete config.headers['Content-Type'];

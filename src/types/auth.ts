@@ -2,7 +2,7 @@ export interface User {
     id: string;
     email: string;
     name: string;
-    role: 'DOCTOR' | 'ADMIN' | 'COLLABORATOR';
+    role: 'DOCTOR' | 'ADMIN' | 'COLLABORATOR' | 'ENTITY_ADMIN' | 'ENTITY_SUPERVISOR' | 'ENTITY_COLLABORATOR';
     profileImage?: string;
 }
 
