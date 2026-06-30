@@ -38,7 +38,7 @@ export default function DashboardScreen() {
     const { data: profile, role: profileRole } = useSelector((state: RootState) => state.profile);
     const { user } = useSelector((state: RootState) => state.auth);
     const { items: notifications, unreadCount } = useSelector((state: RootState) => state.notifications);
-    const { activeDoctorId } = useSelector((state: RootState) => state.activeDoctor);
+    const { activeDoctorId, activeDoctorProfile, isLoading: activeDoctorLoading } = useSelector((state: RootState) => state.activeDoctor);
 
     const isCollaborator = (profileRole || user?.role) === 'COLLABORATOR';
 
@@ -96,7 +96,8 @@ export default function DashboardScreen() {
         .filter(apt => !apt.treated && (apt.status === 'ACCEPTED' || apt.status === 'REACTIVATED' || apt.status === 'BOOKED'))
         .slice(0, 5);
 
-    const isLoading = statsLoading && !refreshing && !statsData;
+    const hasData = statsData && (!isCollaborator || activeDoctorProfile);
+    const isLoading = !hasData && !refreshing && !statsError;
 
     return (
         <View style={styles.container}>

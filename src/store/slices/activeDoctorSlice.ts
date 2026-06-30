@@ -28,6 +28,7 @@ export interface ActiveDoctorState {
     isLoading: boolean;
     isSwitching: boolean;
     error: string | null;
+    hasLoaded: boolean;
 }
 
 const initialState: ActiveDoctorState = {
@@ -37,6 +38,7 @@ const initialState: ActiveDoctorState = {
     isLoading: false,
     isSwitching: false,
     error: null,
+    hasLoaded: false,
 };
 
 export const fetchAssociatedDoctors = createAsyncThunk(
@@ -107,6 +109,7 @@ const activeDoctorSlice = createSlice({
             state.doctors = [];
             state.activeDoctorId = null;
             state.activeDoctorProfile = null;
+            state.hasLoaded = false;
         }
     },
     extraReducers: (builder) => {
@@ -118,6 +121,7 @@ const activeDoctorSlice = createSlice({
             })
             .addCase(fetchAssociatedDoctors.fulfilled, (state, action) => {
                 state.isLoading = false;
+                state.hasLoaded = true;
                 state.doctors = action.payload.doctors;
                 if (action.payload.activeDoctorId) {
                     state.activeDoctorId = action.payload.activeDoctorId;
@@ -128,6 +132,7 @@ const activeDoctorSlice = createSlice({
             })
             .addCase(fetchAssociatedDoctors.rejected, (state, action) => {
                 state.isLoading = false;
+                state.hasLoaded = true;
                 state.error = action.payload as string;
             })
 

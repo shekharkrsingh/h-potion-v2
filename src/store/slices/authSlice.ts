@@ -47,7 +47,8 @@ export const loginUser = createAsyncThunk(
     async (credentials: LoginPayload, { rejectWithValue }) => {
         try {
             const token = await AuthService.login(credentials);
-            return token;
+            const user = await AuthService.getUserFromToken();
+            return { token, user };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Login failed');
         }
@@ -59,7 +60,8 @@ export const registerUser = createAsyncThunk(
     async (payload: SignupPayload, { rejectWithValue }) => {
         try {
             const token = await AuthService.register(payload);
-            return token;
+            const user = await AuthService.getUserFromToken();
+            return { token, user };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Registration failed');
         }
@@ -71,7 +73,8 @@ export const verifyUser = createAsyncThunk(
     async (payload: VerifyPayload, { rejectWithValue }) => {
         try {
             const token = await AuthService.verify(payload);
-            return token;
+            const user = await AuthService.getUserFromToken();
+            return { token, user };
         } catch (error: any) {
             return rejectWithValue(error.message || 'Verification failed');
         }
@@ -207,7 +210,8 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isAuthenticated = true;
-                state.token = action.payload;
+                state.token = action.payload.token;
+                state.user = action.payload.user as User;
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.isLoading = false;
@@ -221,9 +225,10 @@ const authSlice = createSlice({
             })
             .addCase(registerUser.fulfilled, (state, action) => {
                 state.isLoading = false;
-                if (action.payload) {
+                if (action.payload?.token) {
                     state.isAuthenticated = true;
-                    state.token = action.payload;
+                    state.token = action.payload.token;
+                    state.user = action.payload.user as User;
                     state.signupSuccess = true;
                 } else {
                     state.signupStep = 2; // Transition to OTP if no token returned
@@ -241,7 +246,8 @@ const authSlice = createSlice({
             .addCase(verifyUser.fulfilled, (state, action) => {
                 state.isLoading = false;
                 state.isAuthenticated = true;
-                state.token = action.payload;
+                state.token = action.payload.token;
+                state.user = action.payload.user as User;
                 state.signupSuccess = true;
             })
             .addCase(verifyUser.rejected, (state, action) => {

@@ -41,7 +41,7 @@ export const DoctorSwitcher: React.FC<DoctorSwitcherProps> = ({
         ? () => setInternalVisible(false)
         : () => onExternalClose?.();
 
-    const { doctors, activeDoctorId, isSwitching, isLoading } = useSelector(
+    const { doctors, activeDoctorId, isSwitching, isLoading, hasLoaded } = useSelector(
         (state: RootState) => state.activeDoctor
     );
 
@@ -61,7 +61,9 @@ export const DoctorSwitcher: React.FC<DoctorSwitcherProps> = ({
         }
     };
 
-    if (isLoading && showTrigger) {
+    const shouldShowSkeleton = !hasLoaded && doctors.length === 0;
+
+    if (shouldShowSkeleton && showTrigger) {
         return (
             <View style={[styles.card, getGlassStyle(theme)]}>
                 <View style={styles.leftContent}>
