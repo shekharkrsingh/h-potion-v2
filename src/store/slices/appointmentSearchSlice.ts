@@ -17,10 +17,24 @@ const initialState: AppointmentSearchState = {
 
 export const searchAppointments = createAsyncThunk(
     'appointmentSearch/search',
-    async (criteria: Record<string, any>, { rejectWithValue, signal }) => {
+    async (criteriaPayload: Record<string, any> | Record<string, any>[], { rejectWithValue, signal }) => {
         try {
-            const response = await client.post(endpoints.appointments.search, criteria, { signal });
-            return response.data.data || [];
+            if (Array.isArray(criteriaPayload)) {
+                const promises = criteriaPayload.map(criteria =>
+                    client.post(endpoints.appointments.search, criteria, { signal })
+                );
+                const responses = await Promise.all(promises);
+                
+                const allResults = responses.flatMap(res => res.data.data || []);
+                // Deduplicate by appointmentId
+                const uniqueResults = Array.from(
+                    new Map(allResults.map(item => [item.appointmentId, item])).values()
+                );
+                return uniqueResults;
+            } else {
+                const response = await client.post(endpoints.appointments.search, criteriaPayload, { signal });
+                return response.data.data || [];
+            }
         } catch (error: any) {
             if (error.name === 'CanceledError') {
                 return rejectWithValue('Request canceled');

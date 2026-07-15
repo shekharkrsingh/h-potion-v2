@@ -73,8 +73,9 @@ const notificationSlice = createSlice({
             } else {
                 // Add new
                 state.items.unshift(action.payload);
-                state.unreadCount += 1;
             }
+            // Recalculate unread count
+            state.unreadCount = state.items.filter(n => !n.isRead).length;
         },
     },
     extraReducers: (builder) => {

@@ -33,6 +33,10 @@ import {
     fetchAppointments,
     Appointment
 } from '@/store/slices/appointmentSlice';
+import {
+    searchAppointments,
+    clearSearchResults
+} from '@/store/slices/appointmentSearchSlice';
 import { useTheme } from '@/theme/ThemeContext';
 import { Text } from '@/components/ui/Text';
 import { createStyles } from '@/styles/screens/BookingScreen.styles';
@@ -186,6 +190,7 @@ const BookingScreen = () => {
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const { appointments, isLoading } = useSelector((state: RootState) => state.appointments);
+    const { searchResults, isLoading: isSearchLoading } = useSelector((state: RootState) => state.appointmentSearch);
     const [refreshing, setRefreshing] = useState(false);
     const [activeFilter, setActiveFilter] = useState<'all' | 'available' | 'treated' | 'emergency' | 'cancelled' | 'in-person' | 'online' | 'pending'>('available');
     const [searchQuery, setSearchQuery] = useState('');
@@ -199,6 +204,51 @@ const BookingScreen = () => {
 
         return () => clearTimeout(timer);
     }, [searchQuery]);
+
+    useEffect(() => {
+        if (debouncedSearchQuery.trim() === '') {
+            dispatch(clearSearchResults());
+            return;
+        }
+
+        const query = debouncedSearchQuery.trim();
+        const searchCriteria: any = {
+            appointmentDate: new Date().toISOString().split('T')[0], // Only today's appointments
+            page: 0,
+            size: 100,
+            sortBy: 'appointmentDateTime',
+            sortDirection: 'desc'
+        };
+
+        const cleanNumbers = query.replace(/\D/g, '');
+        
+        if (query.includes('@')) {
+            searchCriteria.email = query;
+        } else if (query.includes('-') && /^[A-Za-z0-9-]+$/.test(query)) {
+            // Has hyphens and is alphanumeric (e.g., UUID or APT-123)
+            searchCriteria.appointmentId = query;
+        } else if (/^[A-Za-z0-9]+$/.test(query) && /[a-zA-Z]/.test(query) && /[0-9]/.test(query)) {
+            // Alphanumeric with no spaces/hyphens (e.g., APT123)
+            searchCriteria.appointmentId = query;
+        } else if (!/[a-zA-Z]/.test(query)) {
+            if (cleanNumbers.length > 10) {
+                // More than 10 digits, definitely a contact with country code
+                searchCriteria.contact = cleanNumbers.slice(-10);
+            } else {
+                // Digits <= 10: Could be an appointment ID or a full/partial contact number.
+                // We'll search both by passing an array of criteria.
+                const criteriaForId = { ...searchCriteria, appointmentId: query };
+                const criteriaForContact = { ...searchCriteria, contact: cleanNumbers };
+                dispatch(searchAppointments([criteriaForId, criteriaForContact]));
+                return; // Early return to avoid dispatching the single criteria below
+            }
+        } else {
+            // Has letters and spaces, likely a patient name
+            searchCriteria.patientName = query;
+        }
+
+        dispatch(searchAppointments(searchCriteria));
+    }, [debouncedSearchQuery, dispatch]);
 
     const [showFilterModal, setShowFilterModal] = useState(false);
     const [isSearchVisible, setIsSearchVisible] = useState(false);
@@ -269,7 +319,9 @@ const BookingScreen = () => {
     );
 
     const filteredAppointments = useMemo(() => {
-        return appointments.filter(apt => {
+        const sourceList = debouncedSearchQuery.trim() !== '' ? searchResults : appointments;
+
+        return sourceList.filter(apt => {
             // Hide cancelled appointments from all views except when explicitly filtered by 'cancelled'
             if (activeFilter !== 'cancelled' && apt.status === 'CANCELLED') {
                 return false;
@@ -286,13 +338,10 @@ const BookingScreen = () => {
                                         : activeFilter === 'online' ? apt.appointmentType === 'ONLINE'
                                             : true;
 
-            const matchesSearch = debouncedSearchQuery === '' ||
-                apt.patientName.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                apt.appointmentId.toLowerCase().includes(debouncedSearchQuery.toLowerCase());
-
-            return matchesFilter && matchesSearch;
+            // Search filtering is now done on the backend, so we just apply the status filters
+            return matchesFilter;
         });
-    }, [appointments, activeFilter, debouncedSearchQuery]);
+    }, [appointments, searchResults, activeFilter, debouncedSearchQuery]);
 
     const getDynamicFilterLabel = useCallback(() => {
         if (activeFilter === 'emergency') return 'Emergency';
@@ -382,7 +431,7 @@ const BookingScreen = () => {
                         />
                     </Animated.View>
                     {/* List */}
-                    {isLoading && !refreshing && filteredAppointments.length === 0 ? (
+                    {(isLoading || isSearchLoading) && !refreshing && filteredAppointments.length === 0 ? (
                         <BookingListSkeleton />
                     ) : (
                         <Animated.FlatList

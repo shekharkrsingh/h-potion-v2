@@ -1,5 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, TouchableOpacity, Animated } from 'react-native';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/store';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@/theme/ThemeContext';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -19,6 +21,7 @@ export const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarPro
     const { theme } = useTheme();
     const insets = useSafeAreaInsets();
     const styles = createStyles(theme, insets.bottom);
+    const { unreadCount } = useSelector((state: RootState) => state.notifications);
 
     const icons: Record<string, { icon: any; label: string }> = {
         index: { icon: LayoutDashboard, label: 'Home' },
@@ -81,11 +84,31 @@ export const CustomTabBar = ({ state, descriptors, navigation }: BottomTabBarPro
                             style={styles.tabItem}
                             activeOpacity={0.7}
                         >
-                            <Icon
-                                size={22}
-                                color={isFocused ? theme.icon.active : theme.icon.default}
-                                strokeWidth={isFocused ? 2.5 : 2}
-                            />
+                            <View style={{ position: 'relative' }}>
+                                <Icon
+                                    size={22}
+                                    color={isFocused ? theme.icon.active : theme.icon.default}
+                                    strokeWidth={isFocused ? 2.5 : 2}
+                                />
+                                {route.name === 'notifications/index' && unreadCount > 0 && (
+                                    <View style={{
+                                        position: 'absolute',
+                                        top: -6,
+                                        right: -8,
+                                        backgroundColor: theme.status.error,
+                                        minWidth: 18,
+                                        height: 18,
+                                        borderRadius: 9,
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        paddingHorizontal: 4,
+                                        borderWidth: 1.5,
+                                        borderColor: theme.mode === 'dark' ? '#1E293B' : '#FFFFFF'
+                                    }}>
+                                        <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold', textAlign: 'center', lineHeight: 12 }}>{unreadCount > 99 ? '99+' : unreadCount}</Text>
+                                    </View>
+                                )}
+                            </View>
                             <Text
                                 style={[styles.label, { color: isFocused ? theme.icon.active : theme.icon.default }]}
                             >

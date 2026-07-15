@@ -67,12 +67,20 @@ export const ProfileSummaryHeader = React.memo(({
             />
 
             <View style={styles.profileAvatarWrapper}>
-                <Image
-                    source={{ uri: profile?.profilePicture }}
-                    style={styles.profileAvatar}
-                    contentFit="cover"
-                    transition={500}
-                />
+                {profile?.profilePicture ? (
+                    <Image
+                        source={{ uri: profile?.profilePicture }}
+                        style={styles.profileAvatar}
+                        contentFit="cover"
+                        transition={500}
+                    />
+                ) : (
+                    <View style={[styles.profileAvatar, { backgroundColor: theme.palette.primary[500], justifyContent: 'center', alignItems: 'center' }]}>
+                        <Text variant="h2" weight="bold" color="#ffffff">
+                            {`${profile?.firstName?.charAt(0) || ''}${profile?.lastName?.charAt(0) || ''}`.toUpperCase() || '?'}
+                        </Text>
+                    </View>
+                )}
             </View>
             <View style={styles.profileInfo}>
                 <Text variant="h3" weight="bold" color={theme.text.primary}>

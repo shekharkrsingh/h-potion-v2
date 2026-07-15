@@ -16,7 +16,7 @@ import {
     Outfit_600SemiBold,
     Outfit_700Bold,
 } from '@expo-google-fonts/outfit';
-import { fetchAssociatedDoctors, fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
+import { fetchAssociatedDoctors, fetchActiveDoctorProfile, switchActiveDoctor } from '@/store/slices/activeDoctorSlice';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { compareVersions } from '@/utils/version';
 
@@ -74,17 +74,28 @@ export const useAppInitialization = () => {
                         const activeDoctorId = await AsyncStorage.getItem('activeDoctorId');
                         
                         let targetDoctorId = activeDoctorId;
-                        if (!targetDoctorId && assocResult.activeDoctorId) {
-                            targetDoctorId = assocResult.activeDoctorId;
-                            await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
-                        } else if (!targetDoctorId && assocResult.doctors.length > 0) {
-                            targetDoctorId = assocResult.doctors[0].doctorId;
-                            await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
+                        
+                        // Verify that targetDoctorId actually exists in the associated doctors list
+                        const isValidTarget = targetDoctorId && assocResult.doctors.some(d => d.doctorId === targetDoctorId);
+                        
+                        if (!isValidTarget) {
+                            if (assocResult.activeDoctorId) {
+                                targetDoctorId = assocResult.activeDoctorId;
+                                await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
+                            } else if (assocResult.doctors.length > 0) {
+                                targetDoctorId = assocResult.doctors[0].doctorId;
+                                await AsyncStorage.setItem('activeDoctorId', targetDoctorId);
+                            }
                         }
 
                         if (targetDoctorId) {
-                            websocketAppointment.updateDoctorSubscription(targetDoctorId);
-                            await dispatch(fetchActiveDoctorProfile()).unwrap();
+                            if (targetDoctorId !== assocResult.activeDoctorId) {
+                                // Sync backend with local stored active doctor
+                                await dispatch(switchActiveDoctor(targetDoctorId)).unwrap();
+                            } else {
+                                websocketAppointment.updateDoctorSubscription(targetDoctorId);
+                                await dispatch(fetchActiveDoctorProfile()).unwrap();
+                            }
                         }
                     } catch (err) {
                         console.error('[AppInit] Failed to load collaborator context:', err);

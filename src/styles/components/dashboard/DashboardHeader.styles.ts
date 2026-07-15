@@ -64,19 +64,7 @@ export const createStyles = (theme: ColorTheme) => {
             ...getGlassStyle(theme),
             padding: 0,
         },
-        notificationContainer: {
-            position: 'absolute',
-            top: 5,
-            right: 5,
-        },
-        notificationBadge: {
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            backgroundColor: theme.status.error,
-            borderWidth: 1.5,
-            borderColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 1)' : '#FFFFFF',
-        },
+
         workloadText: {
             marginTop: 2,
             fontWeight: '600',

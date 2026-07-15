@@ -157,12 +157,27 @@ export const DashboardHeader: React.FC<DashboardHeaderProps> = ({
                         router.push('/(tabs)/notifications' as any);
                     }}
                 >
-                    <Bell size={22} color={theme.icon.default} />
-                    {notificationCount > 0 && (
-                        <PulseView active={true} scaleTo={1.2} duration={2000} style={styles.notificationContainer}>
-                            <View style={styles.notificationBadge} />
-                        </PulseView>
-                    )}
+                    <View style={{ position: 'relative' }}>
+                        <Bell size={22} color={theme.icon.default} />
+                        {notificationCount > 0 && (
+                            <View style={{
+                                position: 'absolute',
+                                top: -6,
+                                right: -8,
+                                backgroundColor: theme.status.error,
+                                minWidth: 18,
+                                height: 18,
+                                borderRadius: 9,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                paddingHorizontal: 4,
+                                borderWidth: 1.5,
+                                borderColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 1)' : '#FFFFFF'
+                            }}>
+                                <Text style={{ color: '#fff', fontSize: 10, fontWeight: 'bold', textAlign: 'center', lineHeight: 12 }}>{notificationCount > 99 ? '99+' : notificationCount}</Text>
+                            </View>
+                        )}
+                    </View>
                 </TouchableOpacity>
             </View>
         </View >

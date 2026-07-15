@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store/hooks';
 import {
     ChevronLeft, Lock, Mail, Bell, Shield, Headphones,
-    LogOut, UserX, Trash2, Calendar, Users, Activity, AlertOctagon,
+    LogOut, Trash2, Calendar, Users, Activity, AlertOctagon,
     ArrowRight, FileStack, Contact, Building
 } from 'lucide-react-native';
 
@@ -228,21 +228,19 @@ export default function SettingsScreen() {
                             <LogOut size={20} color={theme.status.error} />
                             <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Sign Out</Text>
                         </TouchableOpacity>
-                        <View style={styles.divider} />
-                        <TouchableOpacity onPress={() => Alert.alert("Deactivate", "Feature coming soon.")} style={styles.signOutButton}>
-                            <UserX size={20} color={theme.status.error} />
-                            <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Deactivate Account</Text>
-                        </TouchableOpacity>
-                        <View style={styles.divider} />
+                        
                         {/* Delete Data Zone - Hidden for Collaborators */}
                         {!isCollaborator && (
-                            <TouchableOpacity
-                                onPress={() => Alert.alert("Delete Data", "Are you sure? This action cannot be undone.", [{ text: "Cancel" }, { text: "Delete", style: "destructive" }])}
-                                style={styles.deleteDataButton}
-                            >
-                                <Trash2 size={20} color={theme.status.error} />
-                                <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Delete Data</Text>
-                            </TouchableOpacity>
+                            <>
+                                <View style={styles.divider} />
+                                <TouchableOpacity
+                                    onPress={() => Alert.alert("Delete Data", "Are you sure? This action cannot be undone.", [{ text: "Cancel" }, { text: "Delete", style: "destructive" }])}
+                                    style={styles.deleteDataButton}
+                                >
+                                    <Trash2 size={20} color={theme.status.error} />
+                                    <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Delete Data</Text>
+                                </TouchableOpacity>
+                            </>
                         )}
                     </Animated.View>
 
