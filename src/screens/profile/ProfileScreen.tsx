@@ -3,7 +3,6 @@ import { View, ScrollView, Alert, ImageBackground, Animated, RefreshControl, Tou
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Constants from 'expo-constants';
 import {
     User,
     Settings,
@@ -537,9 +536,6 @@ const ProfileScreen = () => {
                             </ProfileSection>
                         </FadeInView>
 
-                        <Text style={styles.versionText} variant="caption">
-                            Version {Constants.expoConfig?.version || '0.0.6'} (Build 2026.02.01)
-                        </Text>
                     </View>
                 </Animated.ScrollView>
             </ImageBackground>

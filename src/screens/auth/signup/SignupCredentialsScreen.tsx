@@ -10,7 +10,6 @@ import { Checkbox } from '@/components/ui/Checkbox';
 import { useTheme } from '@/theme/ThemeContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { AuthFooter } from '@/components/auth/AuthFooter';
-import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { useToast } from '@/context/ToastContext';
 import { createStyles } from '@/styles/auth/signup-credentials.styles';
@@ -83,7 +82,7 @@ export default function SignupCredentialsScreen() {
             }
             logo={<AuthLogo />}
             footer={<AuthFooter mode="signup" />}
-            socialLogins={<SocialLoginButtons />}
+            /* socialLogins={<SocialLoginButtons />} [TEMP DISABLED] */
         >
             <View style={styles.container}>
                 <View>

@@ -8,10 +8,14 @@ import { useTheme } from '@/theme/ThemeContext';
 import { createEditComponentStyles } from '@/styles/components/EditComponents.styles';
 import { spacing } from '@/theme/spacing';
 import { getFullImageUrl } from '@/utils/formatters';
+import { Text } from '@/components/ui/Text';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface EditImageHeaderProps {
     profileUri?: string;
     coverUri?: string;
+    firstName?: string;
+    lastName?: string;
     onEditProfile: () => void;
     onEditCover: () => void;
     scrollY?: Animated.Value;
@@ -20,6 +24,8 @@ interface EditImageHeaderProps {
 export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
     profileUri,
     coverUri,
+    firstName,
+    lastName,
     onEditProfile,
     onEditCover,
     scrollY,
@@ -43,6 +49,8 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
 
     const [profileError, setProfileError] = React.useState(false);
     const [coverError, setCoverError] = React.useState(false);
+
+    const hasProfileImage = profileUri && !profileError;
 
     return (
         <View style={styles.headerContainer}>
@@ -82,11 +90,11 @@ export const EditImageHeader: React.FC<EditImageHeaderProps> = ({
             </Animated.View>
 
             <View style={styles.avatarWrapper}>
-                <Image
-                    source={{ uri: (!profileError && getFullImageUrl(profileUri)) || 'https://via.placeholder.com/150' }}
-                    onError={() => setProfileError(true)}
+                <Avatar
+                    uri={getFullImageUrl(profileUri)}
+                    firstName={firstName}
+                    lastName={lastName}
                     style={styles.profileImage}
-                    transition={300}
                 />
                 <TouchableOpacity
                     style={styles.editProfileButton}

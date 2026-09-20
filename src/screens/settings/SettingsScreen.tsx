@@ -7,7 +7,7 @@ import { useSelector } from 'react-redux';
 import { useAppDispatch } from '@/store/hooks';
 import {
     ChevronLeft, Lock, Mail, Bell, Shield, Headphones,
-    LogOut, Trash2, Calendar, Users, Activity, AlertOctagon,
+    LogOut, Calendar, Users, Activity, AlertOctagon,
     ArrowRight, FileStack, Contact, Building
 } from 'lucide-react-native';
 
@@ -200,14 +200,17 @@ export default function SettingsScreen() {
                             </Text>
                             <ThemeSelector />
                         </View>
+                        {/* [TEMP DISABLED] Features temporarily hidden per user request
                         <View style={styles.divider} />
                         <ToggleRow icon={Activity} color={theme.palette.primary[400]} label="Interaction Haptics" description="Feedback for taps and gestures" value={hapticsEnabled} onValueChange={v => handleToggle('Haptics', v, toggleHaptics)} theme={theme} />
                         <View style={styles.divider} />
                         <ToggleRow icon={Bell} color={theme.palette.secondary[400]} label="Messaging Vibration" description="Vibration for new messages" value={notificationsVibrationEnabled} onValueChange={v => handleToggle('Vibration', v, toggleNotificationsVibration)} theme={theme} />
                         <View style={styles.divider} />
                         <ToggleRow icon={AlertOctagon} color={theme.status.error} label="Emergency Alerts" description="Bypass silent for appointments" value={emergencyAlertsEnabled} onValueChange={v => handleToggle('Emergency Alerts', v, toggleEmergencyAlerts)} theme={theme} />
+                        */}
                     </Animated.View>
 
+                    {/* [TEMP DISABLED] Features temporarily hidden per user request
                     <Text style={styles.sectionLabel}>Notification Settings</Text>
                     <SettingCard index={5} icon={Bell} title="Preferences" subtitle="Email & Push notifications" onPress={() => setActiveModal('notifications')} theme={theme} componentStyles={componentStyles} />
 
@@ -217,6 +220,7 @@ export default function SettingsScreen() {
                             <SettingCard index={6} icon={Shield} title="Privacy Settings" subtitle="Control profile visibility" onPress={() => setActiveModal('privacy')} theme={theme} componentStyles={componentStyles} />
                         </>
                     )}
+                    */}
 
                     <Text style={styles.sectionLabel}>Help & Support</Text>
                     <SettingCard index={7} icon={Headphones} title="Contact Support" subtitle="Get technical assistance" onPress={() => setActiveModal('support')} theme={theme} componentStyles={componentStyles} />
@@ -228,20 +232,7 @@ export default function SettingsScreen() {
                             <LogOut size={20} color={theme.status.error} />
                             <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Sign Out</Text>
                         </TouchableOpacity>
-                        
-                        {/* Delete Data Zone - Hidden for Collaborators */}
-                        {!isCollaborator && (
-                            <>
-                                <View style={styles.divider} />
-                                <TouchableOpacity
-                                    onPress={() => Alert.alert("Delete Data", "Are you sure? This action cannot be undone.", [{ text: "Cancel" }, { text: "Delete", style: "destructive" }])}
-                                    style={styles.deleteDataButton}
-                                >
-                                    <Trash2 size={20} color={theme.status.error} />
-                                    <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Delete Data</Text>
-                                </TouchableOpacity>
-                            </>
-                        )}
+
                     </Animated.View>
 
                     <View style={styles.footer}>

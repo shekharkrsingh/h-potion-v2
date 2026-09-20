@@ -17,7 +17,7 @@ export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.c
         flex: 1,
     },
     scrollContent: {
-        paddingBottom: 100,
+        paddingBottom: spacing.xxl,
         alignItems: 'center',
     },
     contentWrapper: {

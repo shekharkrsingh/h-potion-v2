@@ -40,7 +40,7 @@ export const createStyles = (theme: ColorTheme) => {
         },
         listContent: {
             padding: spacing.l,
-            paddingBottom: 100,
+            paddingBottom: spacing.xxl,
         },
         headerSubTitle: {
             marginTop: 4,

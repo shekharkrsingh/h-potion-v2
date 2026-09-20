@@ -17,6 +17,7 @@ import { useTheme } from '@/theme/ThemeContext';
 import { createProfileComponentStyles } from '@/styles/components/ProfileComponents.styles';
 import { User } from '@/types/auth';
 import { getFullImageUrl } from '@/utils/formatters';
+import { Avatar } from '@/components/ui/Avatar';
 
 interface ProfileHeaderProps {
     user: User | null;
@@ -92,15 +93,12 @@ export const ProfileHeader = React.memo(({ user, profileName, profileEmail, prof
             <View style={styles.headerContent}>
                 <View style={{ position: 'relative', marginBottom: 12, zIndex: 20 }}>
                     <View style={[styles.avatarContainer, { marginBottom: 0 }]}>
-                        {(!profileError && getFullImageUrl(profileImage || user?.profileImage)) ? (
-                            <Image
-                                source={{ uri: getFullImageUrl(profileImage || user?.profileImage)! }}
-                                style={styles.avatarImage}
-                                onError={() => setProfileError(true)}
-                            />
-                        ) : (
-                            <Text style={styles.initialsText}>{initials}</Text>
-                        )}
+                        <Avatar
+                            uri={getFullImageUrl(profileImage || user?.profileImage)}
+                            firstName={displayName.split(' ')[0]}
+                            lastName={displayName.split(' ')[1]}
+                            style={styles.avatarImage}
+                        />
                     </View>
                     {!isCollaborator && verificationStatus && (
                         <View style={{ position: 'absolute', bottom: 0, right: 0, zIndex: 30 }}>

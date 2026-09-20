@@ -9,7 +9,6 @@ import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { AuthStepLayout } from '@/components/shared/AuthStepLayout';
 import { createStyles } from '@/styles/auth/login.styles';
 import { AuthFooter } from '@/components/auth/AuthFooter';
-import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
 
@@ -48,7 +47,7 @@ export default function LoginScreen() {
             isLoading={isLoading}
             primaryButtonDisabled={!/\S+@\S+\.\S+/.test(email) || password.length === 0}
             footer={<AuthFooter mode="login" />}
-            socialLogins={<SocialLoginButtons />}
+            /* socialLogins={<SocialLoginButtons />} [TEMP DISABLED] */
             logo={<AuthLogo />}
             onHelp={() => showToast('For technical assistance, please contact clinical support.', 'info')}
         >

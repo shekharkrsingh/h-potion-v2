@@ -106,7 +106,7 @@ export const createStyles = (theme: ColorTheme) => {
         // List
         scrollContent: {
             paddingHorizontal: spacing.xl,
-            paddingBottom: 100, // Extra space for tab bar
+            paddingBottom: spacing.xxl,
         },
         bookingCard: {
             marginBottom: spacing.m,

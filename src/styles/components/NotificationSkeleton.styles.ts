@@ -6,7 +6,7 @@ import { radius } from '@/theme/radius';
 export const createSkeletonStyles = (theme: ColorTheme) => StyleSheet.create({
     listContent: {
         padding: spacing.l,
-        paddingBottom: 100,
+        paddingBottom: spacing.xxl,
     },
     notificationItem: {
         padding: spacing.m,

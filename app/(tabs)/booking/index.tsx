@@ -8,7 +8,6 @@ import {
     TextInput,
     Animated,
     Platform,
-    InteractionManager,
     LayoutAnimation,
     Modal
 } from 'react-native';
@@ -276,7 +275,7 @@ const BookingScreen = () => {
     }, []);
 
     const loadData = useCallback(async () => {
-        InteractionManager.runAfterInteractions(() => {
+        requestAnimationFrame(() => {
             dispatch(fetchAppointments());
         });
     }, [dispatch]);

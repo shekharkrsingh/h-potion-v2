@@ -3,6 +3,7 @@ import { View, Animated, Easing } from 'react-native';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text } from '@/components/ui/Text';
+import { Avatar } from '@/components/ui/Avatar';
 import { ColorTheme } from '@/theme/colors';
 
 interface ProfileSummaryHeaderProps {
@@ -21,6 +22,8 @@ export const ProfileSummaryHeader = React.memo(({
     // Animation Values
     const slideAnim = useRef(new Animated.Value(100)).current; // Start from right
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    
+    const [imageError, setImageError] = React.useState(false);
 
     useEffect(() => {
         Animated.parallel([
@@ -37,6 +40,8 @@ export const ProfileSummaryHeader = React.memo(({
             })
         ]).start();
     }, []);
+
+    const hasProfileImage = profile?.profilePicture && !imageError;
 
     return (
         <Animated.View style={[
@@ -67,20 +72,12 @@ export const ProfileSummaryHeader = React.memo(({
             />
 
             <View style={styles.profileAvatarWrapper}>
-                {profile?.profilePicture ? (
-                    <Image
-                        source={{ uri: profile?.profilePicture }}
-                        style={styles.profileAvatar}
-                        contentFit="cover"
-                        transition={500}
-                    />
-                ) : (
-                    <View style={[styles.profileAvatar, { backgroundColor: theme.palette.primary[500], justifyContent: 'center', alignItems: 'center' }]}>
-                        <Text variant="h2" weight="bold" color="#ffffff">
-                            {`${profile?.firstName?.charAt(0) || ''}${profile?.lastName?.charAt(0) || ''}`.toUpperCase() || '?'}
-                        </Text>
-                    </View>
-                )}
+                <Avatar
+                    uri={profile?.profilePicture}
+                    firstName={profile?.firstName}
+                    lastName={profile?.lastName}
+                    style={styles.profileAvatar}
+                />
             </View>
             <View style={styles.profileInfo}>
                 <Text variant="h3" weight="bold" color={theme.text.primary}>

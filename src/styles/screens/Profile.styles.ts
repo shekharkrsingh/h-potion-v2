@@ -8,7 +8,7 @@ export const createProfileScreenStyles = (theme: ColorTheme) => StyleSheet.creat
         backgroundColor: theme.background.default,
     },
     scrollContent: {
-        paddingBottom: 100, // Space for tab bar
+        paddingBottom: spacing.xxl, 
     },
     background: {
         flex: 1,

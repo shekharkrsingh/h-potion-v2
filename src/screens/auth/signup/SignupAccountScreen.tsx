@@ -10,7 +10,6 @@ import { useTheme } from '@/theme/ThemeContext';
 import { User } from 'lucide-react-native';
 import { Text } from '@/components/ui/Text';
 import { AuthFooter } from '@/components/auth/AuthFooter';
-import { SocialLoginButtons } from '@/components/auth/SocialLoginButtons';
 import { AuthLogo } from '@/components/auth/AuthLogo';
 import { createStyles } from '@/styles/auth/signup-account.styles';
 import { VerificationBadge } from '@/components/ui/VerificationBadge';
@@ -53,7 +52,7 @@ export default function SignupAccountScreen() {
             primaryButtonDisabled={!firstName || !lastName}
             onHelp={() => Alert.alert('Help', 'Need assistance? Contact support@hpotion.com')}
             footer={<AuthFooter mode="signup" />}
-            socialLogins={<SocialLoginButtons />}
+            /* socialLogins={<SocialLoginButtons />} [TEMP DISABLED] */
             logo={<AuthLogo />}
         >
             <View style={styles.container}>

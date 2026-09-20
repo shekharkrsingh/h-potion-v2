@@ -8,6 +8,8 @@ import { ThemedStatusBar } from '@/components/ui/ThemedStatusBar';
 
 import { ToastProvider } from '@/context/ToastContext';
 import CustomSplashScreen from '@/screens/SplashScreen';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { OfflineScreen } from '@/components/ui/OfflineScreen';
 import { UpdateRequiredScreen } from '@/screens/UpdateRequiredScreen';
 import * as ExpoSplashScreen from 'expo-splash-screen';
 import { setUpdateStatus } from '@/store/slices/configSlice';
@@ -30,6 +32,7 @@ function AppContent() {
     const { updateStatus } = useSelector((state: RootState) => state.config);
     const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
     const { hapticsEnabled } = useSelector((state: RootState) => state.userSettings);
+    const netInfo = useNetInfo();
 
     useEffect(() => {
         haptics.setEnabled(hapticsEnabled);
@@ -93,6 +96,7 @@ function AppContent() {
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(tabs)" />
             </Stack>
+            <OfflineScreen isOffline={netInfo.isConnected === false} />
             <ThemedStatusBar />
         </ToastProvider>
     );

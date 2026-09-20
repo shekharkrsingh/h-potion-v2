@@ -167,6 +167,10 @@ const EditProfileScreen = () => {
     }, [dispatch, showToast]);
 
     const handleImageUpdate = useCallback((type: 'profile' | 'cover') => {
+        // [TEMP DISABLED] Image Upload functionality hidden per user request
+        showToast('Image upload is coming soon!', 'info');
+        
+        /* 
         pickImage(type === 'profile' ? [1, 1] : [16, 9]).then((result) => {
             if (result) {
                 setPreviewImage({
@@ -179,6 +183,7 @@ const EditProfileScreen = () => {
         }).catch((err: any) => {
             showToast((typeof err === 'string' ? err : err?.message) || 'Pick Failed', 'error');
         });
+        */
     }, [showToast]);
 
     const handleConfirmUpload = useCallback(async () => {
@@ -271,6 +276,8 @@ const EditProfileScreen = () => {
                     <EditImageHeader
                         profileUri={profile?.profilePicture}
                         coverUri={profile?.coverPicture}
+                        firstName={profile?.firstName}
+                        lastName={profile?.lastName}
                         onEditProfile={() => handleImageUpdate('profile')}
                         onEditCover={() => handleImageUpdate('cover')}
                         scrollY={scrollY}
