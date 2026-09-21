@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, TouchableOpacity, Animated, RefreshControl, Alert, Platform, ActivityIndicator, Modal, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Animated, RefreshControl, Platform, ActivityIndicator, Modal, StyleSheet } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, FileText, Calendar, Download, Share2, History, CalendarRange, FileCheck, CheckCircle, Info, X, LayoutDashboard } from 'lucide-react-native';
@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '@/theme/ThemeContext';
 import { useToast } from '@/context/ToastContext';
+import { useDialog } from '@/context/DialogContext';
 import { Text } from '@/components/ui/Text';
 import { createStyles } from '@/styles/screens/ReportScreen.styles';
 import { resourceService, ReportResult } from '@/services/resourceService';
@@ -21,6 +22,7 @@ const DOWNLOAD_DIR_KEY = 'hpotion_download_dir_shared';
 export default function ReportScreen() {
     const { theme } = useTheme();
     const { showToast } = useToast();
+    const { showDialog, hideDialog } = useDialog();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
@@ -64,7 +66,12 @@ export default function ReportScreen() {
         const queryEnd = end || toDate;
 
         if (!queryStart) {
-            Alert.alert("Date Required", "Please select at least a start date.");
+            showDialog({
+                title: "Date Required",
+                description: "Please select at least a start date.",
+                variant: 'error',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
             return;
         }
 
@@ -76,7 +83,12 @@ export default function ReportScreen() {
             setReportResult(result);
             haptics.impact();
 
-            Alert.alert("Success", "Your medical report has been generated and sent to your email.");
+            showDialog({
+                title: "Success",
+                description: "Your medical report has been generated and sent to your email.",
+                variant: 'success',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
 
             // Auto-trigger download logic for Android HPotion folder
             const targetUri = await AsyncStorage.getItem(DOWNLOAD_DIR_KEY);
@@ -91,7 +103,12 @@ export default function ReportScreen() {
                 }
             }
         } catch (err: any) {
-            Alert.alert("Generation Failed", err.message);
+            showDialog({
+                title: "Generation Failed",
+                description: err.message,
+                variant: 'error',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
             haptics.error();
         } finally {
             setIsGenerating(false);

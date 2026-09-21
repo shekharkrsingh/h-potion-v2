@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef } from 'react';
-import { View, TouchableOpacity, Animated, Alert, Platform, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, TouchableOpacity, Animated, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSelector } from 'react-redux';
@@ -10,6 +10,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { useTheme } from '@/theme/ThemeContext';
 import { useToast } from '@/context/ToastContext';
+import { useDialog } from '@/context/DialogContext';
 import { Text } from '@/components/ui/Text';
 import { createStyles } from '@/styles/screens/DoctorCardScreen.styles';
 import { resourceService, ReportResult } from '@/services/resourceService';
@@ -22,6 +23,7 @@ const DOWNLOAD_DIR_KEY = 'hpotion_download_dir_shared';
 export default function DoctorCardScreen() {
     const { theme } = useTheme();
     const { showToast } = useToast();
+    const { showDialog, hideDialog } = useDialog();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
@@ -46,7 +48,12 @@ export default function DoctorCardScreen() {
             setCardResult(result);
             haptics.impact();
 
-            Alert.alert("Success", "Your doctor card has been generated and sent to your email.");
+            showDialog({
+                title: "Success",
+                description: "Your doctor card has been generated and sent to your email.",
+                variant: 'success',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
 
             // Auto-trigger download for Android
             const targetUri = await AsyncStorage.getItem(DOWNLOAD_DIR_KEY);
@@ -61,7 +68,12 @@ export default function DoctorCardScreen() {
                 }
             }
         } catch (err: any) {
-            Alert.alert("Generation Failed", err.message);
+            showDialog({
+                title: "Generation Failed",
+                description: err.message,
+                variant: 'error',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
             haptics.error();
         } finally {
             setIsGenerating(false);

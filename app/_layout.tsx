@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { ThemedStatusBar } from '@/components/ui/ThemedStatusBar';
 
 import { ToastProvider } from '@/context/ToastContext';
+import { DialogProvider } from '@/context/DialogContext';
 import CustomSplashScreen from '@/screens/SplashScreen';
 import { useNetInfo } from '@react-native-community/netinfo';
 import { OfflineScreen } from '@/components/ui/OfflineScreen';
@@ -91,14 +92,16 @@ function AppContent() {
     }
 
     return (
-        <ToastProvider>
-            <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(tabs)" : "(auth)"}>
-                <Stack.Screen name="(auth)" />
-                <Stack.Screen name="(tabs)" />
-            </Stack>
-            <OfflineScreen isOffline={netInfo.isConnected === false} />
-            <ThemedStatusBar />
-        </ToastProvider>
+        <DialogProvider>
+            <ToastProvider>
+                <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(tabs)" : "(auth)"}>
+                    <Stack.Screen name="(auth)" />
+                    <Stack.Screen name="(tabs)" />
+                </Stack>
+                <OfflineScreen isOffline={netInfo.isConnected === false} />
+                <ThemedStatusBar />
+            </ToastProvider>
+        </DialogProvider>
     );
 }
 

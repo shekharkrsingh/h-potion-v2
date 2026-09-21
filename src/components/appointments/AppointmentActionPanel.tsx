@@ -12,7 +12,7 @@ import {
 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { Text } from '@/components/ui/Text';
-import { Alert } from 'react-native';
+import { useDialog } from '@/context/DialogContext';
 import {
     canMarkAvailable,
     canMarkUnavailable,
@@ -53,6 +53,7 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
     onReactivate,
 }) => {
     const { theme, isDark } = useTheme();
+    const { showDialog, hideDialog } = useDialog();
 
     const handleAction = (
         validationFn: (appt: Appointment) => ActionValidation,
@@ -63,27 +64,34 @@ export const AppointmentActionPanel: React.FC<AppointmentActionPanelProps> = ({
         const validation = validationFn(appointment);
         if (!validation.allowed) {
             haptics.error();
-            Alert.alert('Action Not Allowed', validation.message);
+            showDialog({
+                title: 'Action Not Allowed',
+                description: validation.message,
+                variant: 'danger',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
             return;
         }
 
         if (validation.needsConfirmation) {
             haptics.selection();
-            Alert.alert(
+            showDialog({
                 title,
-                validation.message || 'Are you sure you want to proceed?',
-                [
-                    { text: 'Cancel', style: 'cancel' },
-                    {
-                        text: 'Confirm',
-                        style: variant === 'destructive' ? 'destructive' : 'default',
-                        onPress: () => {
-                            haptics.impact();
-                            actionFn();
-                        }
+                description: validation.message || 'Are you sure you want to proceed?',
+                variant: variant === 'destructive' ? 'danger' : 'default',
+                primaryAction: {
+                    label: 'Confirm',
+                    onPress: () => {
+                        hideDialog();
+                        haptics.impact();
+                        actionFn();
                     }
-                ]
-            );
+                },
+                secondaryAction: {
+                    label: 'Cancel',
+                    onPress: hideDialog
+                }
+            });
         } else {
             haptics.impact();
             actionFn();

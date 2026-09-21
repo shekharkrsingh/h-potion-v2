@@ -7,7 +7,6 @@ import {
     LayoutAnimation,
     Platform,
     ImageBackground,
-    Alert,
     Animated,
     FlatList,
 } from 'react-native';
@@ -25,6 +24,7 @@ import {
     clearSearchResults,
 } from '@/store/slices/appointmentSearchSlice';
 import { useTheme } from '@/theme/ThemeContext';
+import { useDialog } from '@/context/DialogContext';
 import { Text } from '@/components/ui/Text';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -190,6 +190,7 @@ const AppointmentsScreen = () => {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { theme, isDark } = useTheme();
+    const { showDialog, hideDialog } = useDialog();
     const styles = createStyles(theme);
     const scrollViewRef = useRef<any>(null);
 
@@ -297,11 +298,11 @@ const AppointmentsScreen = () => {
             // Check if at least one filter is provided
             if (Object.keys(filteredCriteria).length === 0) {
                 if (!isLoadMore) {
-                    Alert.alert(
-                        'No Filters Applied',
-                        'Please enter at least one search criterion to find appointments.',
-                        [{ text: 'OK' }]
-                    );
+                    showDialog({
+                        title: 'No Filters Applied',
+                        description: 'Please enter at least one search criterion to find appointments.',
+                        primaryAction: { label: 'OK', onPress: hideDialog }
+                    });
                 }
                 return;
             }
@@ -331,20 +332,20 @@ const AppointmentsScreen = () => {
             }
 
             if (pageToFetch === 0 && result.length === 0) {
-                Alert.alert(
-                    'No Results',
-                    'No appointments found matching your search criteria. Try adjusting your filters.',
-                    [{ text: 'OK' }]
-                );
+                showDialog({
+                    title: 'No Results',
+                    description: 'No appointments found matching your search criteria. Try adjusting your filters.',
+                    primaryAction: { label: 'OK', onPress: hideDialog }
+                });
             }
         } catch (error: any) {
             if (!isLoadMore) {
                 haptics.error();
-                Alert.alert(
-                    'Search Failed',
-                    error || 'Unable to search appointments. Please check your connection and try again.',
-                    [{ text: 'OK' }]
-                );
+                showDialog({
+                    title: 'Search Failed',
+                    description: error || 'Unable to search appointments. Please check your connection and try again.',
+                    primaryAction: { label: 'OK', onPress: hideDialog }
+                });
             } else {
                 console.error("Load more failed:", error);
             }

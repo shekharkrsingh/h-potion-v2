@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import { RootState } from '@/store';
+import { useDialog } from '@/context/DialogContext';
 import { updateSignupData } from '@/store/slices/authSlice';
 import { AuthStepLayout } from '@/components/shared/AuthStepLayout';
 import { Input } from '@/components/ui/Input';
@@ -20,6 +21,7 @@ export default function SignupAccountScreen() {
     const { theme } = useTheme();
     const styles = createStyles(theme);
     const signupData = useSelector((state: RootState) => state.auth.signupData);
+    const { showDialog, hideDialog } = useDialog();
 
     const [firstName, setFirstName] = useState(signupData.firstName || '');
     const [lastName, setLastName] = useState(signupData.lastName || '');
@@ -50,7 +52,7 @@ export default function SignupAccountScreen() {
             onPrimaryPress={handleNext}
             onBack={() => router.back()}
             primaryButtonDisabled={!firstName || !lastName}
-            onHelp={() => Alert.alert('Help', 'Need assistance? Contact support@hpotion.com')}
+            onHelp={() => showDialog({ title: 'Help', description: 'Need assistance? Contact support@hpotion.com', primaryAction: { label: 'OK', onPress: hideDialog } })}
             footer={<AuthFooter mode="signup" />}
             /* socialLogins={<SocialLoginButtons />} [TEMP DISABLED] */
             logo={<AuthLogo />}

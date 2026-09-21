@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { View, ScrollView, Alert, ImageBackground, Animated, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { View, ScrollView, ImageBackground, Animated, RefreshControl, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,7 +8,6 @@ import {
     Settings,
     Shield,
     HelpCircle,
-    LogOut,
     ChevronRight,
     MapPin,
     Bell,
@@ -32,7 +31,6 @@ import { useTheme } from '@/theme/ThemeContext';
 import { spacing } from '@/theme/spacing';
 import { radius } from '@/theme/radius';
 import { RootState, AppDispatch } from '@/store';
-import { logoutUser } from '@/store/slices/authSlice';
 import { fetchProfile } from '@/store/slices/profileSlice';
 import { fetchAssociatedDoctors, fetchActiveDoctorProfile } from '@/store/slices/activeDoctorSlice';
 import { Text } from '@/components/ui/Text';
@@ -128,24 +126,6 @@ const ProfileScreen = () => {
             </View>
         );
     }
-
-    const handleLogout = () => {
-        Alert.alert(
-            "Sign Out",
-            "Are you sure you want to sign out?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Sign Out",
-                    style: "destructive",
-                    onPress: async () => {
-                        await dispatch(logoutUser());
-                        router.replace('/(auth)/login');
-                    }
-                }
-            ]
-        );
-    };
 
     const fullName = profile?.firstName ? `${profile.firstName} ${profile.lastName}` : undefined;
     const displayVerificationStatus = profile?.licenseNumber 
@@ -517,21 +497,6 @@ const ProfileScreen = () => {
                                     icon={Settings}
                                     onPress={() => router.push({ pathname: '/settings', params: { reset: 'true' } })}
                                     showDivider={false}
-                                />
-                            </ProfileSection>
-                        </FadeInView>
-
-                        <FadeInView delay={500} translateYOffset={50}>
-                            <ProfileSection>
-                                <ProfileOption
-                                    label="Sign Out"
-                                    icon={LogOut}
-                                    iconColor={theme.palette.error[500]}
-                                    iconBg={theme.palette.error[50]}
-                                    textColor={theme.palette.error[600]}
-                                    onPress={handleLogout}
-                                    showDivider={false}
-                                    rightElement={<View />}
                                 />
                             </ProfileSection>
                         </FadeInView>

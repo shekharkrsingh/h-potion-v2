@@ -28,6 +28,7 @@ import { ProfileSummaryHeader } from '@/components/settings/ProfileSummaryHeader
 import { SettingsSkeleton } from '@/components/settings/SettingsSkeleton';
 import { PasswordModal } from '@/components/settings/modals/PasswordModal';
 import { EmailModal } from '@/components/settings/modals/EmailModal';
+import { CustomDialog } from '@/components/ui/CustomDialog';
 import { PrivacyModal } from '@/components/settings/modals/PrivacyModal';
 import { SupportModal } from '@/components/settings/modals/SupportModal';
 import { BaseEditModal } from '@/components/profile/edit/modals/BaseEditModal';
@@ -55,6 +56,11 @@ export default function SettingsScreen() {
 
     const activeDoctor = useSelector((state: RootState) => state.activeDoctor.doctors.find(d => d.doctorId === state.activeDoctor.activeDoctorId));
     const [doctorModalVisible, setDoctorModalVisible] = useState(false);
+    const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+    const [isEmailModalVisible, setIsEmailModalVisible] = useState(false);
+    const [isPrivacyModalVisible, setIsPrivacyModalVisible] = useState(false);
+    const [isSupportModalVisible, setIsSupportModalVisible] = useState(false);
+    const [isSignOutDialogVisible, setIsSignOutDialogVisible] = useState(false);
 
     // Derived Styles & State
     const styles = useMemo(() => createSettingsStyles(theme, insets, isDark), [theme, insets, isDark]);
@@ -111,19 +117,11 @@ export default function SettingsScreen() {
         }
     }, [router]);
 
-    const handleSignOut = useCallback(() => {
-        Alert.alert("Sign Out", "Are you sure you want to sign out?", [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Sign Out",
-                style: "destructive",
-                onPress: async () => {
-                    await dispatch(logoutUser());
-                    showToast("Signed out successfully", "success");
-                    router.replace('/(auth)/login');
-                }
-            }
-        ]);
+    const handleSignOut = useCallback(async () => {
+        setIsSignOutDialogVisible(false);
+        await dispatch(logoutUser());
+        showToast("Signed out successfully", "success");
+        router.replace('/(auth)/login');
     }, [dispatch, router, showToast]);
 
     const handleToggle = (name: string, value: boolean, action: any) => {
@@ -228,7 +226,7 @@ export default function SettingsScreen() {
                     <Text style={styles.sectionLabel}>Danger Zone</Text>
                     <Animated.View style={[componentStyles.sectionCard, { padding: 16, opacity: fadeAnim, transform: [{ translateY: slideAnims[8] }] }]}>
                         {/* Sign Out Button */}
-                        <TouchableOpacity onPress={handleSignOut} style={styles.signOutButton}>
+                        <TouchableOpacity onPress={() => setIsSignOutDialogVisible(true)} style={styles.signOutButton}>
                             <LogOut size={20} color={theme.status.error} />
                             <Text weight="bold" color={theme.status.error} style={styles.buttonText}>Sign Out</Text>
                         </TouchableOpacity>
@@ -264,6 +262,24 @@ export default function SettingsScreen() {
                     showTrigger={false}
                     externalVisible={doctorModalVisible}
                     onExternalClose={() => setDoctorModalVisible(false)}
+                />
+
+                <CustomDialog
+                    visible={isSignOutDialogVisible}
+                    onClose={() => setIsSignOutDialogVisible(false)}
+                    variant="danger"
+                    icon={<LogOut size={24} />}
+                    title="Sign Out"
+                    description="Are you sure you want to sign out? You will need to enter your password to log back in."
+                    primaryAction={{
+                        label: "Sign Out",
+                        onPress: handleSignOut,
+                        style: "danger",
+                    }}
+                    secondaryAction={{
+                        label: "Cancel",
+                        onPress: () => setIsSignOutDialogVisible(false),
+                    }}
                 />
             </ImageBackground>
         </View>

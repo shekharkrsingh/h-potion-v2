@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Alert } from 'react-native';
+import { View } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'expo-router';
 import { RootState, AppDispatch } from '@/store';
@@ -8,6 +8,7 @@ import { AuthStepLayout } from '@/components/shared/AuthStepLayout';
 import { Input } from '@/components/ui/Input';
 import { Checkbox } from '@/components/ui/Checkbox';
 import { useTheme } from '@/theme/ThemeContext';
+import { useDialog } from '@/context/DialogContext';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react-native';
 import { AuthFooter } from '@/components/auth/AuthFooter';
 import { AuthLogo } from '@/components/auth/AuthLogo';
@@ -19,6 +20,7 @@ export default function SignupCredentialsScreen() {
     const dispatch = useDispatch<AppDispatch>();
     const router = useRouter();
     const { theme } = useTheme();
+    const { showDialog, hideDialog } = useDialog();
     const styles = createStyles(theme);
     const signupData = useSelector((state: RootState) => state.auth.signupData);
 
@@ -72,7 +74,12 @@ export default function SignupCredentialsScreen() {
             primaryButtonTitle="Next: Identity Verification"
             onPrimaryPress={handleNext}
             onBack={() => router.back()}
-            onHelp={() => Alert.alert('Help', 'Need assistance? Contact support@hpotion.com')}
+            onHelp={() => showDialog({
+                title: 'Help',
+                description: 'Need assistance? Contact support@hpotion.com',
+                variant: 'info',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            })}
             isLoading={isLoading}
             primaryButtonDisabled={
                 !/\S+@\S+\.\S+/.test(email) ||

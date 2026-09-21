@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef, useCallback } from 'react';
-import { View, TouchableOpacity, Alert, Animated, ImageBackground, Platform, RefreshControl } from 'react-native';
+import { View, TouchableOpacity, Animated, ImageBackground, Platform, RefreshControl } from 'react-native';
 import { useLocalSearchParams, useRouter, useFocusEffect, useNavigation } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -16,6 +16,7 @@ import {
     clearSelectedAppointment
 } from '@/store/slices/appointmentDetailsSlice';
 import { useTheme } from '@/theme/ThemeContext';
+import { useDialog } from '@/context/DialogContext';
 import { createStyles } from '@/styles/screens/AppointmentDetails.styles';
 import { Text } from '@/components/ui/Text';
 import { FadeInView } from '@/components/ui/FadeInView';
@@ -36,6 +37,7 @@ export default function AppointmentDetailsScreen() {
     const navigation = useNavigation();
     const insets = useSafeAreaInsets();
     const dispatch = useDispatch<AppDispatch>();
+    const { showDialog, hideDialog } = useDialog();
 
     const { theme, isDark } = useTheme();
     // Using simple keys from styles, assuming createStyles provides them. 
@@ -119,18 +121,18 @@ export default function AppointmentDetailsScreen() {
         try {
             await dispatch(updateAppointment({ id: appointment.appointmentId, data })).unwrap();
         } catch (err: any) {
-            Alert.alert('Update Failed', err.message);
+            showDialog({ title: 'Update Failed', description: err.message, primaryAction: { label: 'OK', onPress: hideDialog } });
         }
-    }, [appointment, dispatch]);
+    }, [appointment, dispatch, showDialog, hideDialog]);
 
     const handleCancel = useCallback(async () => {
         if (!appointment) return;
         try {
             await dispatch(cancelAppointment(appointment.appointmentId)).unwrap();
         } catch (e: any) {
-            Alert.alert('Error', e.message);
+            showDialog({ title: 'Error', description: e.message, primaryAction: { label: 'OK', onPress: hideDialog } });
         }
-    }, [appointment, dispatch]);
+    }, [appointment, dispatch, showDialog, hideDialog]);
 
     const handleReactivate = useCallback(async () => {
         if (!appointment) return;
@@ -140,9 +142,9 @@ export default function AppointmentDetailsScreen() {
                 data: { appointmentStatus: 'REACTIVATED' }
             })).unwrap();
         } catch (e: any) {
-            Alert.alert('Error', e.message);
+            showDialog({ title: 'Error', description: e.message, primaryAction: { label: 'OK', onPress: hideDialog } });
         }
-    }, [appointment, dispatch]);
+    }, [appointment, dispatch, showDialog, hideDialog]);
 
     const handleEditSave = useCallback(async (updates: any) => {
         await handleUpdate(updates);
@@ -375,10 +377,12 @@ export default function AppointmentDetailsScreen() {
                         activeOpacity={0.9}
                         style={[styles.smartFab, { backgroundColor: smartAction.color }]}
                         onPress={() => {
-                            Alert.alert(smartAction.label, 'Confirm this action?', [
-                                { text: 'Cancel', style: 'cancel' },
-                                { text: 'Proceed', onPress: smartAction.action }
-                            ]);
+                            showDialog({
+                                title: smartAction.label,
+                                description: 'Confirm this action?',
+                                secondaryAction: { label: 'Cancel', onPress: hideDialog },
+                                primaryAction: { label: 'Proceed', onPress: () => { hideDialog(); smartAction.action(); } }
+                            });
                         }}
                     >
                         <smartAction.icon size={20} color={smartAction.textColor} strokeWidth={3} />

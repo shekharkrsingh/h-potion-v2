@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
-import { View, TouchableOpacity, ScrollView, Animated, RefreshControl, Alert } from 'react-native';
+import { View, TouchableOpacity, ScrollView, Animated, RefreshControl } from 'react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ChevronLeft, UserPlus, Users, Mail } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 import { useTheme } from '@/theme/ThemeContext';
+import { useDialog } from '@/context/DialogContext';
 import { Text } from '@/components/ui/Text';
 import { MeshBackground } from '@/components/ui/MeshBackground';
 import { createStyles } from '@/styles/screens/MyTeamScreen.styles';
@@ -20,6 +21,7 @@ import { InviteMemberModal } from '@/components/settings/team/InviteMemberModal'
 
 export default function MyTeamScreen() {
     const { theme } = useTheme();
+    const { showDialog, hideDialog } = useDialog();
     const insets = useSafeAreaInsets();
     const router = useRouter();
     const styles = useMemo(() => createStyles(theme), [theme]);
@@ -54,12 +56,17 @@ export default function MyTeamScreen() {
             setInvitations(inviteData);
         } catch (error) {
             console.error("Failed to fetch team data:", error);
-            Alert.alert("Connection Issue", "Could not sync team data. Please try again.");
+            showDialog({
+                title: "Connection Issue",
+                description: "Could not sync team data. Please try again.",
+                variant: 'default',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
         } finally {
             setIsLoading(false);
             setRefreshing(false);
         }
-    }, []);
+    }, [showDialog, hideDialog]);
 
     useEffect(() => {
         fetchData();
@@ -83,49 +90,81 @@ export default function MyTeamScreen() {
             await teamService.inviteCollaborator(email, role);
             haptics.impact();
             fetchData(true);
-            Alert.alert("Invitation Sent", `A request has been sent to ${email}.`);
+            showDialog({
+                title: "Invitation Sent",
+                description: `A request has been sent to ${email}.`,
+                variant: 'success',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
         } catch (error) {
             haptics.error();
-            Alert.alert("Failed", "Could not send invitation. They might already be on the team.");
+            showDialog({
+                title: "Failed",
+                description: "Could not send invitation. They might already be on the team.",
+                variant: 'danger',
+                primaryAction: { label: 'OK', onPress: hideDialog }
+            });
         }
     };
 
     const handleRevoke = (id: string) => {
-        Alert.alert("Revoke Invitation", "Are you sure you want to cancel this invitation?", [
-            { text: "Keep", style: "cancel" },
-            {
-                text: "Revoke",
-                style: "destructive",
+        showDialog({
+            title: "Revoke Invitation",
+            description: "Are you sure you want to cancel this invitation?",
+            variant: 'danger',
+            primaryAction: {
+                label: "Revoke",
                 onPress: async () => {
+                    hideDialog();
                     try {
                         await teamService.revokeInvitation(id);
                         haptics.selection();
                         fetchData(true);
                     } catch (e) {
-                        Alert.alert("Error", "Failed to revoke invitation.");
+                        showDialog({
+                            title: "Error",
+                            description: "Failed to revoke invitation.",
+                            variant: 'danger',
+                            primaryAction: { label: 'OK', onPress: hideDialog }
+                        });
                     }
                 }
+            },
+            secondaryAction: {
+                label: "Keep",
+                onPress: hideDialog
             }
-        ]);
+        });
     };
 
     const handleRemove = (id: string, name: string) => {
-        Alert.alert("Remove Collaborator", `Are you sure you want to remove ${name}? They will lose access immediately.`, [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Remove",
-                style: "destructive",
+        showDialog({
+            title: "Remove Collaborator",
+            description: `Are you sure you want to remove ${name}? They will lose access immediately.`,
+            variant: 'danger',
+            primaryAction: {
+                label: "Remove",
                 onPress: async () => {
+                    hideDialog();
                     try {
                         await teamService.removeCollaborator(id);
                         haptics.selection();
                         fetchData(true);
                     } catch (e) {
-                        Alert.alert("Error", "Failed to remove collaborator.");
+                        showDialog({
+                            title: "Error",
+                            description: "Failed to remove collaborator.",
+                            variant: 'danger',
+                            primaryAction: { label: 'OK', onPress: hideDialog }
+                        });
                     }
                 }
+            },
+            secondaryAction: {
+                label: "Cancel",
+                onPress: hideDialog
             }
-        ]);
+        });
     };
 
     // Derived Counts
