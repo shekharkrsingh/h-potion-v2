@@ -78,7 +78,9 @@ export const fetchStatistics = createAsyncThunk(
             return mappedData;
         } catch (error: any) {
             console.error('Fetch Statistics Error:', error);
-            return rejectWithValue(error.message);
+            // Error could be the custom object from handleApiError or a raw error
+            const message = error?.message || error?.response?.data?.message || 'Failed to fetch statistics';
+            return rejectWithValue(message);
         }
     },
     {

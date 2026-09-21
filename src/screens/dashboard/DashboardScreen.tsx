@@ -135,10 +135,17 @@ export default function DashboardScreen() {
                             </FadeInView>
                         )}
 
-                        {statsError && (
-                            <View style={styles.errorContainer}>
-                                <Text style={styles.errorText}>Stats Error: {statsError}</Text>
-                            </View>
+                        {!hasData && !isLoading && !refreshing && (
+                            <FadeInView delay={100}>
+                                <View style={styles.noDataContainer}>
+                                    <Text style={styles.noDataTitle}>No Statistics Available</Text>
+                                    <Text style={styles.noDataSubtitle}>
+                                        {isCollaborator && !activeDoctorProfile 
+                                            ? 'Select a doctor to view their performance metrics.'
+                                            : 'Performance metrics will appear here once you start taking appointments.'}
+                                    </Text>
+                                </View>
+                            </FadeInView>
                         )}
 
                         <FadeInView delay={100} trigger={refreshKey}>

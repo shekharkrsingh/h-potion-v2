@@ -5,7 +5,7 @@
     "scheme": "hpotion",
     "version": "0.0.7",
     "orientation": "portrait",
-    "icon": "./assets/logo.png",
+    "icon": "./assets/appiconnobg.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/logo.png",
+        "foregroundImage": "./assets/appiconnobg.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,
@@ -43,12 +43,13 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/logo.png",
+          "image": "./assets/appiconnobg.png",
+          "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff",
           "dark": {
             "backgroundColor": "#0f172a",
-            "image": "./assets/logo.png"
+            "image": "./assets/appiconnobg.png"
           }
         }
       ],
