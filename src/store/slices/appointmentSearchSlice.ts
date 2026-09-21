@@ -54,6 +54,16 @@ const appointmentSearchSlice = createSlice({
         },
         clearSearchError: (state) => {
             state.error = null;
+        },
+        updateAppointmentSearchLocal: (state, action) => {
+            const index = state.searchResults.findIndex(a => a.appointmentId === action.payload.appointmentId);
+            if (index !== -1) {
+                state.searchResults[index] = { ...state.searchResults[index], ...action.payload };
+            }
+        },
+        addAppointmentSearchLocal: (state, action) => {
+            // Unshift puts the newest appointment at the top
+            state.searchResults.unshift(action.payload);
         }
     },
     extraReducers: (builder) => {
@@ -102,5 +112,5 @@ const appointmentSearchSlice = createSlice({
     },
 });
 
-export const { clearSearchResults, clearSearchError } = appointmentSearchSlice.actions;
+export const { clearSearchResults, clearSearchError, updateAppointmentSearchLocal, addAppointmentSearchLocal } = appointmentSearchSlice.actions;
 export default appointmentSearchSlice.reducer;

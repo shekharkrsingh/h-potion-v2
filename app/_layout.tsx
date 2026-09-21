@@ -1,3 +1,5 @@
+import '@/polyfills'; // MUST BE THE VERY FIRST IMPORT
+
 import { Stack } from 'expo-router';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
@@ -94,11 +96,12 @@ function AppContent() {
     return (
         <DialogProvider>
             <ToastProvider>
-                <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(tabs)" : "(auth)"}>
-                    <Stack.Screen name="(auth)" />
-                    <Stack.Screen name="(tabs)" />
-                </Stack>
-                <OfflineScreen isOffline={netInfo.isConnected === false} />
+                <OfflineScreen isOffline={netInfo.isConnected === false}>
+                    <Stack screenOptions={{ headerShown: false }} initialRouteName={isAuthenticated ? "(tabs)" : "(auth)"}>
+                        <Stack.Screen name="(auth)" />
+                        <Stack.Screen name="(tabs)" />
+                    </Stack>
+                </OfflineScreen>
                 <ThemedStatusBar />
             </ToastProvider>
         </DialogProvider>

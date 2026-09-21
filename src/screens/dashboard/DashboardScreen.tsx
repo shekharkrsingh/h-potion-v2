@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ScrollView, RefreshControl, View, ImageBackground } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNetInfo } from '@react-native-community/netinfo';
+import { WifiOff, AlertCircle, BarChart3 } from 'lucide-react-native';
 import { useTheme } from '@/theme/ThemeContext';
 import { DashboardHeader } from '@/components/dashboard/DashboardHeader';
 import { DoctorSwitcher } from '@/components/collaborator/DoctorSwitcher';
@@ -39,6 +41,7 @@ export default function DashboardScreen() {
     const { user } = useSelector((state: RootState) => state.auth);
     const { items: notifications, unreadCount } = useSelector((state: RootState) => state.notifications);
     const { activeDoctorId, activeDoctorProfile, isLoading: activeDoctorLoading } = useSelector((state: RootState) => state.activeDoctor);
+    const netInfo = useNetInfo();
 
     const isCollaborator = (profileRole || user?.role) === 'COLLABORATOR';
 
@@ -138,11 +141,28 @@ export default function DashboardScreen() {
                         {!hasData && !isLoading && !refreshing && (
                             <FadeInView delay={100}>
                                 <View style={styles.noDataContainer}>
-                                    <Text style={styles.noDataTitle}>No Statistics Available</Text>
+                                    {netInfo.isConnected === false ? (
+                                        <WifiOff size={32} color={theme.palette.error[500]} style={{ marginBottom: spacing.m }} />
+                                    ) : statsError ? (
+                                        <AlertCircle size={32} color={theme.palette.warning[500]} style={{ marginBottom: spacing.m }} />
+                                    ) : (
+                                        <BarChart3 size={32} color={theme.palette.primary[500]} style={{ marginBottom: spacing.m }} />
+                                    )}
+                                    <Text style={styles.noDataTitle}>
+                                        {netInfo.isConnected === false 
+                                            ? 'Offline Mode' 
+                                            : statsError 
+                                                ? 'Unable to Load Statistics' 
+                                                : 'No Statistics Available'}
+                                    </Text>
                                     <Text style={styles.noDataSubtitle}>
-                                        {isCollaborator && !activeDoctorProfile 
-                                            ? 'Select a doctor to view their performance metrics.'
-                                            : 'Performance metrics will appear here once you start taking appointments.'}
+                                        {netInfo.isConnected === false
+                                            ? 'You are currently offline. Performance metrics could not be fetched from the server. Please check your connection.'
+                                            : statsError
+                                                ? 'An error occurred while fetching your performance metrics. Pull down to try again.'
+                                                : isCollaborator && !activeDoctorProfile 
+                                                    ? 'Select a doctor to view their performance metrics.'
+                                                    : 'Performance metrics will appear here once you start taking appointments.'}
                                     </Text>
                                 </View>
                             </FadeInView>

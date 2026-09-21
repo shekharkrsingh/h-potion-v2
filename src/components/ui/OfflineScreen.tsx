@@ -8,36 +8,56 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface OfflineScreenProps {
     isOffline: boolean;
+    children?: React.ReactNode;
 }
 
-export const OfflineScreen: React.FC<OfflineScreenProps> = ({ isOffline }) => {
+export const OfflineScreen: React.FC<OfflineScreenProps> = ({ isOffline, children }) => {
     const { theme } = useTheme();
     const insets = useSafeAreaInsets();
     
     // Total height of the banner (top inset + content padding)
-    const BANNER_HEIGHT = (Platform.OS === 'ios' ? insets.top : insets.top + 10) + 40; 
+    const topInset = insets?.top || 0;
+    const EXTRA_HEIGHT = (Platform.OS === 'ios' ? 0 : 5) + 24;
+    const BANNER_HEIGHT = topInset + EXTRA_HEIGHT; 
     
-    const translateY = useRef(new Animated.Value(-BANNER_HEIGHT)).current;
+    const bannerTranslateY = useRef(new Animated.Value(-BANNER_HEIGHT)).current;
+    const contentTranslateY = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         if (isOffline) {
-            // Slide down
-            Animated.timing(translateY, {
-                toValue: 0,
-                duration: 400,
-                easing: Easing.out(Easing.cubic),
-                useNativeDriver: true,
-            }).start();
+            // Slide banner down and push content down slightly
+            Animated.parallel([
+                Animated.timing(bannerTranslateY, {
+                    toValue: 0,
+                    duration: 400,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(contentTranslateY, {
+                    toValue: EXTRA_HEIGHT,
+                    duration: 400,
+                    easing: Easing.out(Easing.cubic),
+                    useNativeDriver: true, // Switched to true for 60fps GPU acceleration
+                })
+            ]).start();
         } else {
             // Slide up
-            Animated.timing(translateY, {
-                toValue: -BANNER_HEIGHT * 2, // Ensure it hides completely
-                duration: 300,
-                easing: Easing.in(Easing.cubic),
-                useNativeDriver: true,
-            }).start();
+            Animated.parallel([
+                Animated.timing(bannerTranslateY, {
+                    toValue: -BANNER_HEIGHT, // Only slide up by exact height to match speeds
+                    duration: 350,
+                    easing: Easing.inOut(Easing.cubic),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(contentTranslateY, {
+                    toValue: 0,
+                    duration: 350,
+                    easing: Easing.inOut(Easing.cubic),
+                    useNativeDriver: true, // Switched to true
+                })
+            ]).start();
         }
-    }, [isOffline, BANNER_HEIGHT]);
+    }, [isOffline, BANNER_HEIGHT, EXTRA_HEIGHT]);
 
     const styles = StyleSheet.create({
         container: {
@@ -46,33 +66,46 @@ export const OfflineScreen: React.FC<OfflineScreenProps> = ({ isOffline }) => {
             left: 0,
             right: 0,
             backgroundColor: theme.palette.error[600],
-            zIndex: 99999, // Highly elevated above headers
-            paddingTop: Platform.OS === 'ios' ? insets.top : insets.top + 10,
-            paddingBottom: spacing.s,
-            paddingHorizontal: spacing.l,
-            flexDirection: 'row',
-            alignItems: 'center',
-            justifyContent: 'center',
+            zIndex: 99999,
             shadowColor: '#000',
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.15,
             shadowRadius: 8,
             elevation: 10,
         },
+        content: {
+            height: BANNER_HEIGHT,
+            paddingTop: Platform.OS === 'ios' ? topInset : topInset + 5,
+            paddingHorizontal: spacing.l,
+            flexDirection: 'row',
+            alignItems: 'center',
+            justifyContent: 'center',
+        },
         text: {
             marginLeft: spacing.s,
-            color: '#FFFFFF', // Force white text for contrast on error red
+            color: '#FFFFFF', 
             fontSize: 13,
             fontWeight: '600',
+        },
+        wrapper: {
+            flex: 1,
+            backgroundColor: theme.background.canvas, // Prevent white flashes during transform
         }
     });
 
     return (
-        <Animated.View style={[styles.container, { transform: [{ translateY }] }]} pointerEvents="none">
-            <WifiOff size={16} color="#FFFFFF" strokeWidth={2.5} />
-            <Text style={styles.text}>
-                No Internet Connection. Showing cached data.
-            </Text>
-        </Animated.View>
+        <View style={styles.wrapper}>
+            <Animated.View style={[styles.wrapper, { transform: [{ translateY: contentTranslateY }] }]}>
+                {children}
+            </Animated.View>
+            <Animated.View style={[styles.container, { transform: [{ translateY: bannerTranslateY }] }]} pointerEvents="none">
+                <View style={styles.content}>
+                    <WifiOff size={16} color="#FFFFFF" strokeWidth={2.5} />
+                    <Text style={styles.text}>
+                        No Internet Connection. Showing cached data.
+                    </Text>
+                </View>
+            </Animated.View>
+        </View>
     );
 };

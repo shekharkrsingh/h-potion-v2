@@ -1,6 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { ColorTheme } from '@/theme/colors';
 import { spacing } from '@/theme/spacing';
+import { getGlassStyle } from '@/styles/common';
 
 export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.create({
     container: {
@@ -23,6 +24,29 @@ export const createStyles = (theme: ColorTheme, isDark: boolean) => StyleSheet.c
     contentWrapper: {
         width: '100%',
         maxWidth: 800,
+    },
+    noDataContainer: {
+        marginHorizontal: spacing.l,
+        marginTop: spacing.l,
+        marginBottom: spacing.m,
+        padding: spacing.l,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+        ...getGlassStyle(theme),
+    },
+    noDataTitle: {
+        fontSize: 16,
+        fontWeight: '700',
+        color: theme.text.primary,
+        marginBottom: spacing.s,
+        textAlign: 'center',
+    },
+    noDataSubtitle: {
+        fontSize: 14,
+        color: theme.text.secondary,
+        textAlign: 'center',
+        lineHeight: 20,
     },
     errorContainer: {
         padding: spacing.m,

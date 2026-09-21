@@ -4,6 +4,7 @@ import { AppState, AppStateStatus } from "react-native";
 import { haptics } from "@/utils/haptics";
 import type { AppDispatch, RootState } from "@/store";
 import { updateAppointmentLocal, addAppointmentLocal, Appointment } from "@/store/slices/appointmentSlice";
+import { updateAppointmentSearchLocal, addAppointmentSearchLocal } from "@/store/slices/appointmentSearchSlice";
 import { addNotification, Notification } from "@/store/slices/notificationSlice";
 import { webSocketEndpoints } from "./websocketEndpoints";
 import { getValidToken, getUserId, getDoctorId } from "@/services/auth/tokenService";
@@ -24,7 +25,7 @@ class WebsocketService {
     private isConnecting = false;
     private reconnectAttempts = 0;
     private maxReconnectAttempts = 15;
-    private reconnectTimeout: NodeJS.Timeout | null = null;
+    private reconnectTimeout: ReturnType<typeof setTimeout> | null = null;
     private appointmentSubscription: StompSubscription | null = null;
     private notificationSubscription: StompSubscription | null = null;
     private appStateListener: ((state: AppStateStatus) => void) | null = null;
@@ -97,12 +98,17 @@ class WebsocketService {
 
             // Extract and store userId and doctorId for notification subscription
             this.userId = getUserId(token);
-            if (!this.doctorId) {
-                this.doctorId = getDoctorId(token);
+            
+            const state = this.getState() as RootState;
+            // Get doctorId from Redux state (active context) first, fallback to token
+            const contextDoctorId = state.activeDoctor?.activeDoctorId || getDoctorId(token);
+            
+            if (contextDoctorId) {
+                this.doctorId = contextDoctorId;
             }
 
-            if (!this.userId || !this.doctorId) {
-                console.error("WebSocket: Cannot extract userId or doctorId from token");
+            if (!this.userId) {
+                console.error("WebSocket: Cannot extract userId from token. Aborting connection.");
                 this.isConnecting = false;
                 return;
             }
@@ -110,8 +116,10 @@ class WebsocketService {
             const wsUrl = `${webSocketEndpoints.handShake}?token=${encodeURIComponent(token)}`;
 
             this.stompClient = new Client({
-                brokerURL: wsUrl,  // @stomp/stompjs uses React Native's native WebSocket directly
+                brokerURL: wsUrl,
                 reconnectDelay: 0,
+                forceBinaryWSFrames: true,
+                appendMissingNULLonIncoming: true,
                 onConnect: () => {
                     this.reconnectAttempts = 0;
                     this.isConnecting = false;
@@ -320,17 +328,30 @@ class WebsocketService {
                 return;
             }
 
-            if ('appointmentId' in updatedAppointment && updatedAppointment.appointmentId) {
-                const appointment = updatedAppointment as Appointment;
+            // Backend might send 'id' instead of 'appointmentId'
+            const aptId = 'appointmentId' in updatedAppointment 
+                ? updatedAppointment.appointmentId 
+                : (updatedAppointment as Record<string, any>).id;
+
+            if (aptId) {
+                const appointment = { ...updatedAppointment, appointmentId: aptId } as Appointment;
                 
-                // Check if appointment exists in store
                 const state = this.getState?.() as RootState;
-                const exists = state?.appointments?.appointments?.some(a => a.appointmentId === appointment.appointmentId) ?? false;
-                
+
+                // Update Dashboard appointments slice
+                const exists = state?.appointments?.appointments?.some(a => a.appointmentId === aptId) ?? false;
                 if (exists) {
                     this.dispatch(updateAppointmentLocal(appointment));
                 } else {
                     this.dispatch(addAppointmentLocal(appointment));
+                }
+
+                // Update Appointments List search slice
+                const existsInSearch = state?.appointmentSearch?.searchResults?.some(a => a.appointmentId === aptId) ?? false;
+                if (existsInSearch) {
+                    this.dispatch(updateAppointmentSearchLocal(appointment));
+                } else {
+                    this.dispatch(addAppointmentSearchLocal(appointment));
                 }
 
                 // Trigger vibration strictly based on Emergency Override setting
@@ -339,7 +360,7 @@ class WebsocketService {
                     haptics.impact(true); // Force impact for appointment critical updates
                 }
             } else {
-                console.warn('WebSocket: Received appointment without appointmentId');
+                console.warn('WebSocket: Received appointment without appointmentId or id', updatedAppointment);
             }
         } catch (error) {
             console.error('WebSocket: Error handling appointment update:', error);
