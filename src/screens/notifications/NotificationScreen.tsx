@@ -2,7 +2,6 @@ import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { View, SectionList, RefreshControl, TouchableOpacity, LayoutAnimation, ImageBackground } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { isToday, isYesterday, parseISO } from 'date-fns';
 
 import { useTheme } from '@/theme/ThemeContext';
 import { spacing } from '@/theme/spacing';
@@ -17,7 +16,21 @@ import { NotificationSkeleton } from '@/components/notifications/NotificationSke
 import { NotificationEmptyState } from '@/components/notifications/NotificationEmptyState';
 import { websocketAppointment } from '@/services/websocket/websocketService';
 
+// Vanilla JS Date Helpers to replace date-fns
+const isToday = (date: Date) => {
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+        date.getMonth() === today.getMonth() &&
+        date.getFullYear() === today.getFullYear();
+};
 
+const isYesterday = (date: Date) => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return date.getDate() === yesterday.getDate() &&
+        date.getMonth() === yesterday.getMonth() &&
+        date.getFullYear() === yesterday.getFullYear();
+};
 
 const NotificationScreen = () => {
     const dispatch = useDispatch<AppDispatch>();
@@ -97,7 +110,7 @@ const NotificationScreen = () => {
         };
 
         notifications.forEach(item => {
-            const date = parseISO(item.createdAt);
+            const date = new Date(item.createdAt);
             if (isToday(date)) {
                 groups['Today'].push(item);
             } else if (isYesterday(date)) {

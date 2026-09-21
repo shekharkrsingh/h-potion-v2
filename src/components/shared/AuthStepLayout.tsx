@@ -106,12 +106,12 @@ export const AuthStepLayout: React.FC<AuthStepLayoutProps> = ({
             <View style={[styles.sheetContainer, { backgroundColor: theme.background.default }]}>
                 <KeyboardAwareScrollView
                     enableOnAndroid={true}
-                    extraScrollHeight={20}
+                    extraScrollHeight={100}
                     enableAutomaticScroll={true}
+                    style={styles.keyboardAvoidingView}
                     contentContainerStyle={styles.scrollContent}
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
-                    style={styles.keyboardAvoidingView}
                 >
                     <View style={styles.content}>
                         {children}

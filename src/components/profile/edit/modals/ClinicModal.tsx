@@ -80,7 +80,7 @@ export const ClinicModal: React.FC<ClinicModalProps> = ({
     };
 
     return (
-        <KeyboardAwareScrollView
+        <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={modalStyles.scrollContent}
             enableOnAndroid={true}

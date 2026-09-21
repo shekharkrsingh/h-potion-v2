@@ -81,11 +81,16 @@ export const createStyles = (theme: ColorTheme, insets: EdgeInsets) => StyleShee
     },
     // --- DARKROOM OVERLAY ---
     overlay: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         zIndex: 5,
     },
     overlayRow: {
         flexDirection: 'row',
+        width: '100%',
     },
     overlayMask: {
         backgroundColor: 'rgba(0,0,0,0.7)',
@@ -94,7 +99,11 @@ export const createStyles = (theme: ColorTheme, insets: EdgeInsets) => StyleShee
 
     // --- SCANNER FRAME ---
     scannerWrapper: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 10,
@@ -130,7 +139,11 @@ export const createStyles = (theme: ColorTheme, insets: EdgeInsets) => StyleShee
         position: 'absolute',
     },
     laserContainer: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         overflow: 'hidden',
         borderRadius: 12,
     },
@@ -140,7 +153,11 @@ export const createStyles = (theme: ColorTheme, insets: EdgeInsets) => StyleShee
     },
 
     processingOverlay: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
         backgroundColor: 'rgba(0,0,0,0.3)',
@@ -148,7 +165,11 @@ export const createStyles = (theme: ColorTheme, insets: EdgeInsets) => StyleShee
     },
 
     instructionContainer: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         justifyContent: 'center',
         alignItems: 'center',
         zIndex: 11,

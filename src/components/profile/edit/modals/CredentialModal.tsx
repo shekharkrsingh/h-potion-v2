@@ -40,7 +40,7 @@ export const CredentialModal: React.FC<CredentialModalProps> = ({
     };
 
     return (
-        <KeyboardAwareScrollView
+        <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
             showsVerticalScrollIndicator={false}
             enableOnAndroid={true}
             extraScrollHeight={100}

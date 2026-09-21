@@ -34,7 +34,11 @@ export const createStyles = (theme: ColorTheme) => StyleSheet.create({
         borderColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.2)' : 'rgba(14, 165, 233, 0.1)',
     },
     searchGradient: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         borderRadius: radius.full,
     },
     searchText: {

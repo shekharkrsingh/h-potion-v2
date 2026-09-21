@@ -78,7 +78,7 @@ export const LocationModal: React.FC<LocationModalProps> = ({
     };
 
     return (
-        <KeyboardAwareScrollView
+        <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={modalStyles.scrollContent}
             enableOnAndroid={true}
@@ -183,6 +183,6 @@ export const LocationModal: React.FC<LocationModalProps> = ({
                 />
                 <Button title="Cancel" variant="outline" onPress={onClose} fullWidth />
             </View>
-        </KeyboardAwareScrollView >
+        </KeyboardAwareScrollView>
     );
 };

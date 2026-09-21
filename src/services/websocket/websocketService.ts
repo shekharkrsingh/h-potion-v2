@@ -1,5 +1,4 @@
 import { Client, IMessage, StompSubscription } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 import { router } from "expo-router";
 import { AppState, AppStateStatus } from "react-native";
 import { haptics } from "@/utils/haptics";
@@ -109,11 +108,9 @@ class WebsocketService {
             }
 
             const wsUrl = `${webSocketEndpoints.handShake}?token=${encodeURIComponent(token)}`;
-            // @ts-ignore
-            const socket = new SockJS(wsUrl);
 
             this.stompClient = new Client({
-                webSocketFactory: () => socket,
+                brokerURL: wsUrl,  // @stomp/stompjs uses React Native's native WebSocket directly
                 reconnectDelay: 0,
                 onConnect: () => {
                     this.reconnectAttempts = 0;

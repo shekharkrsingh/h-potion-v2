@@ -108,7 +108,7 @@ export const AvailabilityModal: React.FC<AvailabilityModalProps> = ({
     };
 
     return (
-        <KeyboardAwareScrollView
+        <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
             showsVerticalScrollIndicator={false}
             contentContainerStyle={{ paddingBottom: 20 }}
             enableOnAndroid={true}

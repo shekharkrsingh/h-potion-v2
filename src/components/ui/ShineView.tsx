@@ -59,7 +59,7 @@ export const ShineView: React.FC<ShineViewProps> = ({
             onLayout={(e) => setWidth(e.nativeEvent.layout.width)}
         >
             {children}
-            <View style={{ ...StyleSheet.absoluteFillObject }} pointerEvents="none">
+            <View style={StyleSheet.absoluteFill} pointerEvents="none">
                 <Animated.View
                     style={[
                         styles.shineWrapper,

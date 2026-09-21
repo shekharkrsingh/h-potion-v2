@@ -5,16 +5,14 @@ import {
     TouchableOpacity,
     StatusBar,
     Alert,
-    ActivityIndicator,
-    Animated,
-    Platform
+    Animated
 } from 'react-native';
-import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import { useRouter } from 'expo-router';
-import { RotateCcw, Zap, ZapOff, CameraOff, X } from 'lucide-react-native';
-import { BlurView } from 'expo-blur';
-import { LinearGradient } from 'expo-linear-gradient';
+import { RotateCcw, Zap, ZapOff, X, CameraOff } from 'lucide-react-native';
+import { BlurView, BlurTargetView } from 'expo-blur';
+import MaskedView from '@react-native-masked-view/masked-view';
 import { useTheme } from '@/theme/ThemeContext';
 import { Text } from '@/components/ui/Text';
 import { haptics } from '@/utils/haptics';
@@ -26,11 +24,8 @@ const WEB_APP_URL = process.env.EXPO_PUBLIC_WEB_APP_URL || 'https://hpotion.netl
 const baseUrl = WEB_APP_URL.endsWith('/') ? WEB_APP_URL.slice(0, -1) : WEB_APP_URL;
 
 const URL_PATTERNS = [
-    // Pattern 1: /appointment?appointmentid=XXX
     new RegExp(`${baseUrl}/appointment\\?appointmentid=([\\w-]+)`, 'i'),
-    // Pattern 2: /appointment?appointmentId=XXX (different casing)
     new RegExp(`${baseUrl}/appointment\\?appointmentId=([\\w-]+)`, 'i'),
-    // Pattern 3: /appointments/XXX (RESTful style)
     new RegExp(`${baseUrl}/appointments?/([\\w-]+)`, 'i'),
 ];
 
@@ -44,101 +39,102 @@ type QRScanResult = {
 };
 
 const parseQRCodeData = (scannedData: string): QRScanResult => {
-    console.log('[QR Scanner] Scanned data:', scannedData);
-
     try {
         const trimmedData = scannedData.trim();
-
-        // Try all URL patterns
         for (const pattern of URL_PATTERNS) {
             const match = trimmedData.match(pattern);
             if (match && match[1]) {
-                console.log('[QR Scanner] ✅ Valid appointment URL - ID:', match[1]);
                 return { type: 'appointment', data: trimmedData, id: match[1], timestamp: new Date() };
             }
         }
-
-        // Direct ID fallback
         if (APPOINTMENT_ID_PATTERN.test(trimmedData)) {
-            console.log('[QR Scanner] ✅ Valid appointment ID:', trimmedData);
             return { type: 'appointment', data: trimmedData, id: trimmedData, timestamp: new Date() };
         }
-
-        console.log('[QR Scanner] ❌ Invalid QR code format');
     } catch (error) {
-        console.error('[QR Scanner] Parse error:', error);
+        // Ignore
     }
-
     return { type: 'unknown', data: scannedData, timestamp: new Date() };
 };
 
 export default function QRScannerScreen() {
+    const { theme } = useTheme();
     const router = useRouter();
-    const insets = useSafeAreaInsets();
-    const { theme, isDark } = useTheme();
-    const styles = useMemo(() => createStyles(theme, insets), [theme, insets]);
+    const styles = useMemo(() => createStyles(theme, { top: 0, bottom: 0, left: 0, right: 0 }), [theme]);
 
+    // Camera State
     const [permission, requestPermission] = useCameraPermissions();
     const [scanned, setScanned] = useState(false);
-    const [isSuccess, setIsSuccess] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
-    const [flashMode, setFlashMode] = useState<'off' | 'on'>('off');
-    const [cameraType, setCameraType] = useState<CameraType>('back');
+    const [cameraType, setCameraType] = useState<'front' | 'back'>('back');
+    const [flashMode, setFlashMode] = useState<'on' | 'off'>('off');
+    const [isSuccess, setIsSuccess] = useState(false);
 
     // Animation Values
     const scanLineAnim = useRef(new Animated.Value(0)).current;
     const shakeAnim = useRef(new Animated.Value(0)).current;
-
-    // Breathing Animation
     const breathAnim = useRef(new Animated.Value(1)).current;
+    
+    // Blur Target Ref for Android Camera View
+    const blurTargetRef = useRef(null);
 
     useEffect(() => {
         if (!permission) requestPermission();
-
-        // 1. Scan Line Animation
-        const laserAnim = Animated.loop(
-            Animated.sequence([
-                Animated.timing(scanLineAnim, { toValue: 1, duration: 2000, useNativeDriver: true }),
-                Animated.timing(scanLineAnim, { toValue: 0, duration: 2000, useNativeDriver: true })
-            ])
-        );
-        laserAnim.start();
-
-        // 2. Breathing Corners Animation
-        const breatheLoop = Animated.loop(
-            Animated.sequence([
-                Animated.timing(breathAnim, { toValue: 1.05, duration: 1500, useNativeDriver: true }),
-                Animated.timing(breathAnim, { toValue: 1, duration: 1500, useNativeDriver: true })
-            ])
-        );
-        breatheLoop.start();
-
-        return () => {
-            laserAnim.stop();
-            breatheLoop.stop();
-        };
     }, [permission]);
 
-    const shake = React.useCallback(() => {
+    // Scanner Laser & Breathing Animation
+    useEffect(() => {
+        // Laser Line
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(scanLineAnim, {
+                    toValue: 1,
+                    duration: 1500,
+                    useNativeDriver: true,
+                }),
+                Animated.timing(scanLineAnim, {
+                    toValue: 0,
+                    duration: 1500,
+                    useNativeDriver: true,
+                })
+            ])
+        ).start();
+
+        // Continuous Breathing (Pulsing)
+        Animated.loop(
+            Animated.sequence([
+                Animated.timing(breathAnim, { toValue: 1.02, duration: 750, useNativeDriver: true }),
+                Animated.timing(breathAnim, { toValue: 1, duration: 750, useNativeDriver: true })
+            ])
+        ).start();
+    }, []);
+
+    const triggerSuccessAnimation = () => {
+        setIsSuccess(true);
+        Animated.sequence([
+            Animated.timing(breathAnim, { toValue: 1.1, duration: 150, useNativeDriver: true }),
+            Animated.timing(breathAnim, { toValue: 1, duration: 150, useNativeDriver: true })
+        ]).start();
+    };
+
+    const triggerErrorAnimation = () => {
         Animated.sequence([
             Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
             Animated.timing(shakeAnim, { toValue: -10, duration: 50, useNativeDriver: true }),
             Animated.timing(shakeAnim, { toValue: 10, duration: 50, useNativeDriver: true }),
             Animated.timing(shakeAnim, { toValue: 0, duration: 50, useNativeDriver: true })
         ]).start();
-    }, [shakeAnim]);
+    };
 
-    const handleQRCodeScanned = React.useCallback(async ({ data }: { data: string }) => {
-        if (scanned) return;
-
+    const handleQRCodeScanned = ({ data }: { data: string }) => {
+        if (scanned || isProcessing) return;
         setScanned(true);
         setIsProcessing(true);
+        haptics.success();
 
         const result = parseQRCodeData(data);
 
         if (result.type === 'appointment' && result.id) {
-            haptics.impact(); // Success feedback
-            setIsSuccess(true);
+            triggerSuccessAnimation();
             setTimeout(() => {
                 setIsProcessing(false);
                 router.push({
@@ -148,36 +144,29 @@ export default function QRScannerScreen() {
             }, 800);
         } else {
             haptics.error();
-            shake(); // Shake screen
-            setIsProcessing(false);
-
-            // Allow rescanning after a short delay
+            triggerErrorAnimation();
+            
+            // Seamlessly reset the scanner after the shake animation finishes
             setTimeout(() => {
                 setScanned(false);
-            }, 1000);
+                setIsProcessing(false);
+            }, 1200);
         }
-    }, [scanned, router, shake]);
+    };
 
-    if (!permission) return <SafeAreaView style={[styles.container, { backgroundColor: '#000' }]} />;
-
-    if (!permission.granted) {
+    if (!permission?.granted) {
         return (
             <SafeAreaView style={styles.permissionContainer}>
-                <View style={styles.iconCircle}>
-                    <CameraOff size={40} color={theme.status.error} />
-                </View>
+                <CameraOff size={64} color={theme.text.muted} style={{ marginBottom: 24 }} />
                 <Text variant="h3" style={styles.title}>Camera Access Required</Text>
                 <Text variant="bodyMedium" style={styles.subtitle}>
-                    We need permission to access your camera to scan appointment QR codes.
+                    We need access to your camera to scan appointment QR codes.
                 </Text>
                 <TouchableOpacity
+                    style={[styles.primaryButton, { backgroundColor: theme.palette.primary[500] }]}
                     onPress={requestPermission}
-                    style={styles.primaryButton}
                 >
-                    <Text style={styles.buttonText}>Grant Permission</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => router.back()} style={styles.secondaryButton}>
-                    <Text style={styles.secondaryButtonText}>Go Back</Text>
+                    <Text style={styles.buttonText}>Allow Camera Access</Text>
                 </TouchableOpacity>
             </SafeAreaView>
         );
@@ -187,33 +176,44 @@ export default function QRScannerScreen() {
         <View style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-            <CameraView
-                style={StyleSheet.absoluteFill}
-                facing={cameraType}
-                barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-                onBarcodeScanned={scanned ? undefined : handleQRCodeScanned}
-                enableTorch={flashMode === 'on'}
-            />
+            <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
+                <CameraView
+                    style={StyleSheet.absoluteFill}
+                    facing={cameraType}
+                    autofocus="on"
+                    barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                    onBarcodeScanned={scanned ? undefined : handleQRCodeScanned}
+                    enableTorch={flashMode === 'on'}
+                />
+            </BlurTargetView>
 
-            {/* --- Darkroom Overlay --- */}
-            <View style={styles.overlay} pointerEvents="box-none">
-                {/* Top spacer */}
-                <View style={[styles.overlayMask, { flex: 1, width: '100%' }]} />
-
-                <View style={styles.overlayRow} pointerEvents="box-none">
-                    {/* Left spacer */}
-                    <View style={[styles.overlayMask, { flex: 1, height: SCANNER_SIZE }]} />
-
-                    {/* The "Hole" */}
-                    <View style={{ width: SCANNER_SIZE, height: SCANNER_SIZE }} pointerEvents="none" />
-
-                    {/* Right spacer */}
-                    <View style={[styles.overlayMask, { flex: 1, height: SCANNER_SIZE }]} />
-                </View>
-
-                {/* Bottom spacer */}
-                <View style={[styles.overlayMask, { flex: 1, width: '100%' }]} />
-            </View>
+            {/* --- ULTIMATE REDESIGN: MASKED VIEW + GIANT BORDER TRICK --- */}
+            <MaskedView
+                style={[StyleSheet.absoluteFill, { zIndex: 5 }]}
+                maskElement={
+                    <View style={StyleSheet.absoluteFill}>
+                        <Animated.View style={{
+                            position: 'absolute',
+                            top: '50%',
+                            left: '50%',
+                            width: SCANNER_SIZE + 2000,
+                            height: SCANNER_SIZE + 2000,
+                            marginTop: -(SCANNER_SIZE + 2000) / 2,
+                            marginLeft: -(SCANNER_SIZE + 2000) / 2,
+                            borderColor: 'black', // Opaque = Blur is visible
+                            borderWidth: 1000,
+                            backgroundColor: 'transparent', // Transparent = Hole is punched out
+                            borderRadius: 1020, // 1000 border + 20 inner radius
+                            transform: [{ translateX: shakeAnim }, { scale: breathAnim }]
+                        }} />
+                    </View>
+                }
+            >
+                {/* The blur effect that gets masked */}
+                <BlurView blurTarget={blurTargetRef} blurMethod="dimezisBlurView" intensity={70} tint="dark" style={StyleSheet.absoluteFill} />
+                {/* Fallback solid overlay for older Androids where dimezisBlurView is 'none' */}
+                <View style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(0,0,0,0.5)' }]} />
+            </MaskedView>
 
             {/* --- Scanner Frame & Animation (Absolute Centered) --- */}
             <View style={styles.scannerWrapper} pointerEvents="none">
@@ -227,43 +227,25 @@ export default function QRScannerScreen() {
                     <View style={[styles.corner, styles.bl]} />
                     <View style={[styles.corner, styles.br]} />
 
-                    {/* Cyberpunk Laser Gradient - Clipped to Frame */}
                     {!isSuccess && (
                         <View style={styles.laserContainer}>
                             <Animated.View style={[
                                 styles.scanLine,
                                 {
-                                    top: -60, // Start above the frame
+                                    top: -60,
                                     transform: [{
                                         translateY: scanLineAnim.interpolate({
                                             inputRange: [0, 1],
-                                            outputRange: [0, SCANNER_SIZE + 60] // Move full height + tail
+                                            outputRange: [0, SCANNER_SIZE + 60]
                                         })
                                     }]
                                 }
                             ]}>
-                                <LinearGradient
-                                    colors={['rgba(14, 165, 233, 0)', 'rgba(14, 165, 233, 0.3)', theme.palette.primary[500]]}
-                                    style={styles.laserGradient}
-                                />
+                                <View style={styles.laserGradient} />
                             </Animated.View>
                         </View>
                     )}
-
-                    {/* Processing Indicator */}
-                    {isProcessing && (
-                        <View style={styles.processingOverlay}>
-                            <ActivityIndicator size="large" color="#fff" />
-                        </View>
-                    )}
                 </Animated.View>
-            </View>
-
-            {/* Instruction Text (Absolute Positioned relative to frame) */}
-            <View style={styles.instructionContainer} pointerEvents="none">
-                <Text style={styles.instructionText}>
-                    Align the QR code within the frame
-                </Text>
             </View>
 
             {/* --- Active UI Layer --- */}
@@ -298,7 +280,7 @@ export default function QRScannerScreen() {
                             <Text style={[styles.controlText, { color: theme.text.primary }]}>Flash</Text>
                         </TouchableOpacity>
 
-                        <View style={styles.divider} />
+                        <View style={[styles.divider, { backgroundColor: theme.border.subtle }]} />
 
                         <TouchableOpacity
                             style={styles.controlAction}

@@ -9,6 +9,7 @@ import {
     ImageBackground,
     Alert,
     Animated,
+    FlatList,
 } from 'react-native';
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -446,11 +447,10 @@ const AppointmentsScreen = () => {
 
                     <KeyboardAwareFlatList
                         ref={scrollViewRef}
+                        enableOnAndroid={true}
+                        extraScrollHeight={100}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollContent}
-                        enableOnAndroid={true}
-                        enableAutomaticScroll={true}
-                        extraScrollHeight={20}
                         data={isLoading ? [] : searchResults}
                         keyExtractor={(item) => item.appointmentId}
                         ListHeaderComponentStyle={styles.listHeader}
@@ -741,7 +741,7 @@ const AppointmentsScreen = () => {
                             </View>
                         }
                     />
-                </SafeAreaView >
+                </SafeAreaView>
 
                 {showDatePicker && (
                     <DateTimePicker

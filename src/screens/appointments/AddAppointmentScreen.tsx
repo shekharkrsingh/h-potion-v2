@@ -624,12 +624,9 @@ const AddAppointmentScreen = () => {
                 resizeMode="cover"
             >
                 <SafeAreaView edges={['top']} style={styles.overlay}>
-                    <KeyboardAwareScrollView
+                    <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
                         ref={scrollViewRef}
                         style={{ flex: 1 }}
-                        enableOnAndroid={true}
-                        extraScrollHeight={20}
-                        enableAutomaticScroll={true}
                         contentContainerStyle={styles.scrollView}
                         showsVerticalScrollIndicator={false}
                         keyboardShouldPersistTaps="handled"

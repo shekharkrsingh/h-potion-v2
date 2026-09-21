@@ -66,7 +66,11 @@ export const createStyles = (theme: ColorTheme, insets: any) => StyleSheet.creat
         borderColor: theme.border.subtle,
     } as ViewStyle,
     cardMainGradient: {
-        ...StyleSheet.absoluteFillObject,
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
         opacity: 0.03,
     },
     cardPattern: {

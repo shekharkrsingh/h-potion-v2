@@ -5,7 +5,7 @@
     "scheme": "hpotion",
     "version": "0.0.7",
     "orientation": "portrait",
-    "icon": "./assets/appiconnobg.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "automatic",
     "ios": {
       "supportsTablet": true,
@@ -17,7 +17,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/appiconnobg.png",
+        "foregroundImage": "./assets/logo.png",
         "backgroundColor": "#ffffff"
       },
       "predictiveBackGestureEnabled": false,

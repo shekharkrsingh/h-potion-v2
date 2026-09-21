@@ -263,7 +263,7 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                 title="Edit Appointment"
                 onClose={onClose}
             >
-                <KeyboardAwareScrollView
+                <KeyboardAwareScrollView enableOnAndroid={true} extraScrollHeight={100} enableAutomaticScroll={true}
                     showsVerticalScrollIndicator={false}
                     contentContainerStyle={modalStyles.scrollContent}
                     enableOnAndroid={true}
@@ -444,7 +444,7 @@ export const EditAppointmentForm: React.FC<EditAppointmentFormProps> = ({
                                 borderWidth: 1,
                                 borderColor: 'rgba(14,165,233,0.25)',
                             }}>
-                                {/* Card header */}
+                                 {/* Card header */}
                                 <LinearGradient
                                     colors={(theme as any).gradients?.primary || ['#0ea5e9', '#0284c7']}
                                     start={{ x: 0, y: 0 }}
