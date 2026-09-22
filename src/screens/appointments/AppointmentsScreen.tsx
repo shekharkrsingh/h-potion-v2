@@ -13,7 +13,7 @@ import {
 import { KeyboardAwareFlatList } from 'react-native-keyboard-aware-scroll-view';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Search, Filter, Calendar as CalendarIcon, Phone, Hash, ChevronDown, ChevronUp, ChevronRight, X, Clock, Tag, User, ScanLine } from 'lucide-react-native';
 import { useRouter, useFocusEffect } from 'expo-router';
 import { useDispatch, useSelector } from 'react-redux';
@@ -190,6 +190,7 @@ const AppointmentsScreen = () => {
     const router = useRouter();
     const dispatch = useDispatch<AppDispatch>();
     const { theme, isDark } = useTheme();
+    const insets = useSafeAreaInsets();
     const { showDialog, hideDialog } = useDialog();
     const styles = createStyles(theme);
     const scrollViewRef = useRef<any>(null);

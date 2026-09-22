@@ -404,56 +404,59 @@ const BookingScreen = () => {
                 source={isDark ? require('@assets/docbgdark.jpg') : require('@assets/docbglight.jpg')}
                 style={styles.background}
             >
-                <SafeAreaView edges={['top']} style={{ flex: 1 }}>
-                    <Animated.View style={{ opacity: headerOpacity, transform: [{ scale: headerHeight }] }}>
-                        <BookingHeader
-                            theme={theme}
-                            isDark={isDark}
-                            isSearchVisible={isSearchVisible}
-                            setIsSearchVisible={setIsSearchVisible}
-                            searchQuery={searchQuery}
-                            setSearchQuery={setSearchQuery}
-                            searchAnim={searchAnim}
-                            inputRef={inputRef}
-                        />
-                    </Animated.View>
+                <View style={{ flex: 1 }}>
+                    <Animated.FlatList
+                        ref={flatListRef}
+                        data={filteredAppointments}
+                        renderItem={renderItem}
+                        keyExtractor={item => item.appointmentId}
+                        contentContainerStyle={[styles.scrollContent, { paddingTop: spacing.s }]}
+                        showsVerticalScrollIndicator={false}
+                        onScroll={Animated.event(
+                            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+                            { useNativeDriver: true }
+                        )}
+                        scrollEventThrottle={16}
+                        refreshControl={
+                            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.palette.primary[500]} />
+                        }
+                        ListHeaderComponent={
+                            <View style={{ marginHorizontal: -spacing.xl }}>
+                                <Animated.View style={{ opacity: headerOpacity, transform: [{ scale: headerHeight }], paddingTop: insets.top }}>
+                                    <BookingHeader
+                                        theme={theme}
+                                        isDark={isDark}
+                                        isSearchVisible={isSearchVisible}
+                                        setIsSearchVisible={setIsSearchVisible}
+                                        searchQuery={searchQuery}
+                                        setSearchQuery={setSearchQuery}
+                                        searchAnim={searchAnim}
+                                        inputRef={inputRef}
+                                    />
+                                </Animated.View>
 
-                    <Animated.View style={{ transform: [{ translateY: filterTranslateY }] }}>
-                        <BookingFilterSection
-                            activeFilter={activeFilter}
-                            setActiveFilter={setActiveFilter}
-                            isAdvancedFilterActive={isAdvancedFilterActive}
-                            getDynamicFilterLabel={getDynamicFilterLabel}
-                            toggleFilterModal={toggleFilterModal}
-                            theme={theme}
-                            CustomLayoutAnimation={CustomLayoutAnimation}
-                        />
-                    </Animated.View>
-                    {/* List */}
-                    {(isLoading || isSearchLoading) && !refreshing && filteredAppointments.length === 0 ? (
-                        <BookingListSkeleton />
-                    ) : (
-                        <Animated.FlatList
-                            ref={flatListRef}
-                            data={filteredAppointments}
-                            renderItem={renderItem}
-                            keyExtractor={item => item.appointmentId}
-                            contentContainerStyle={[styles.scrollContent, { paddingTop: spacing.s }]}
-                            showsVerticalScrollIndicator={false}
-                            onScroll={Animated.event(
-                                [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-                                { useNativeDriver: true }
-                            )}
-                            scrollEventThrottle={16}
-                            refreshControl={
-                                <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.palette.primary[500]} />
-                            }
-                            initialNumToRender={8}
-                            maxToRenderPerBatch={10}
-                            windowSize={5}
-                            removeClippedSubviews={Platform.OS === 'android'}
-                            getItemLayout={getItemLayout}
-                            ListEmptyComponent={
+                                <Animated.View style={{ transform: [{ translateY: filterTranslateY }], zIndex: 10 }}>
+                                    <BookingFilterSection
+                                        activeFilter={activeFilter}
+                                        setActiveFilter={setActiveFilter}
+                                        isAdvancedFilterActive={isAdvancedFilterActive}
+                                        getDynamicFilterLabel={getDynamicFilterLabel}
+                                        toggleFilterModal={toggleFilterModal}
+                                        theme={theme}
+                                        CustomLayoutAnimation={CustomLayoutAnimation}
+                                    />
+                                </Animated.View>
+                            </View>
+                        }
+                        initialNumToRender={8}
+                        maxToRenderPerBatch={10}
+                        windowSize={5}
+                        removeClippedSubviews={Platform.OS === 'android'}
+                        getItemLayout={getItemLayout}
+                        ListEmptyComponent={
+                            (isLoading || isSearchLoading) && !refreshing ? (
+                                <BookingListSkeleton />
+                            ) : (
                                 <View style={styles.emptyState}>
                                     <ClipboardCheck size={64} color={theme.palette.primary[100]} strokeWidth={1.5} />
                                     <Text style={styles.emptyTitle}>No bookings found</Text>
@@ -463,9 +466,9 @@ const BookingScreen = () => {
                                             : `No appointments match the "${activeFilter}" filter selection.`}
                                     </Text>
                                 </View>
-                            }
-                        />
-                    )}
+                            )
+                        }
+                    />
 
                     <BookingFilterModal
                         visible={showFilterModal}
@@ -477,7 +480,7 @@ const BookingScreen = () => {
                         styles={styles}
                         insets={insets}
                     />
-                </SafeAreaView>
+                </View>
             </ImageBackground>
         </View >
     );
